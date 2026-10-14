@@ -1,6 +1,6 @@
 {
   "name": "tokengrove",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "AI 사용 기록으로 키우는 도트 펫",
   "main": "./out/main/index.js",
   "scripts": {
