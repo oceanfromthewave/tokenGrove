@@ -10,7 +10,7 @@ const out = process.argv[2] ?? 'dist/sprite-preview.png'
 const only = process.argv[3]?.split(',')
 const SHOWN = SPECIES.filter((s) => !only || only.includes(s.id))
 
-const SCALE = 8, PAD = 8
+const SCALE = 5, PAD = 6
 const CELL = GRID * SCALE + PAD * 2
 const W = CELL * STAGES.length, H = CELL * SHOWN.length
 

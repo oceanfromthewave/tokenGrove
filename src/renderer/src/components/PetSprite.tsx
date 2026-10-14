@@ -1,7 +1,7 @@
 import type {SpeciesId, StageId} from '../../../shared/growth'
 import {GRID, paletteOf, spriteOf} from '../../../shared/sprites'
 
-const SCALE = 7 // 화면 확대 배율 (18칸 x 7 = 126px, 펫 창 폭 140에 맞춤)
+const SCALE = 5 // 화면 확대 배율 (24칸 x 5 = 120px, 펫 창 폭 160 안에 들어옴)
 
 function PetSprite({stage, species, scale = SCALE}: {
     stage: StageId

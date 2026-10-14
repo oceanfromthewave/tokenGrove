@@ -14,7 +14,7 @@ function SpeciesDetail({species, count, lastAt}: {
 
     return (
         <div className="detail">
-            <PetSprite stage={stage.id} species={species} scale={10}/>
+            <PetSprite stage={stage.id} species={species} scale={8}/>
             <div className="detail-name">{name}</div>
             <div className="detail-stage">{step + 1}/{STAGES.length} · {stage.name}</div>
             <input

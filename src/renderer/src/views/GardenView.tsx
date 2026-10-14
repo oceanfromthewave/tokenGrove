@@ -109,7 +109,7 @@ function GardenView(): React.JSX.Element {
                 <div className="fence"/>
                 <div className="grass"/>
                 <div className="scene-pet">
-                    <PetSprite stage={stage.id} species={pet.species} scale={10}/>
+                    <PetSprite stage={stage.id} species={pet.species} scale={9}/>
                 </div>
                 {DECOR_SPOTS.map((d, i) => (
                     <div key={i} className="decor" style={{left: `${d.x}%`, bottom: d.y}}>
@@ -164,7 +164,7 @@ function GardenView(): React.JSX.Element {
                                 onClick={() => setSelected(selected === sp.id ? null : sp.id)}
                                 title={own ? sp.name : '아직 만나지 못한 식물'}
                             >
-                                <PetSprite stage="tree" species={sp.id} scale={4}/>
+                                <PetSprite stage="tree" species={sp.id} scale={3}/>
                                 <span>{own ? sp.name : '???'}</span>
                                 {own && own.count > 1 && <em>×{own.count}</em>}
                             </button>
