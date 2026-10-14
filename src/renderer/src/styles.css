@@ -898,3 +898,31 @@ body,
   color: #14281c;
   font-weight: 600;
 }
+
+/* 정원 사진 저장 */
+.name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.name-row .garden-name {
+  margin-bottom: 6px;
+}
+
+.photo-btn {
+  padding: 3px 10px;
+  font: 12px sans-serif;
+  color: #14281c;
+  background: #8fd36b;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toast {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #ffe98a;
+  text-align: right;
+}

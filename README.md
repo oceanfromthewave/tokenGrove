@@ -13,8 +13,8 @@ Use Claude Code or Codex as you normally do and a small flower pot on your deskt
 
 ## How it works
 
-- **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows. Right-click it for the menu (open the garden, launch at login, quit).
-- **Garden window**: open it with the `정원` (garden) button on the pet window. It shows the current plant's level and XP, its growth history, and a collection of the plants you have finished.
+- **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows. Click it and it talks back. Right-click it for the menu (open the garden, hide to tray, launch at login, quit). The tray icon brings it back.
+- **Garden window**: open it with the `정원` (garden) button on the pet window. It shows the current plant's level and XP, its growth history, and a collection of the plants you have finished, a weather and streak summary, achievements and settings. `Save photo` exports the garden scene as a PNG.
 - **Growth**: the app reads only token counts from the logs Claude Code and Codex write and turns them into XP. It checks for new log lines every 30 seconds.
 - **Completion**: at level 11 the plant is stored in the garden collection and a new seed of a random species starts.
 
@@ -49,6 +49,11 @@ The conversion rules live in [`src/shared/usage.ts`](src/shared/usage.ts).
 - The original logs (`~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/*.jsonl`) are only read, never modified.
 - The only file the app writes is `%APPDATA%\tokengrove\save.json`.
 
+## Download
+
+Grab the latest `TokenGrove-Setup-<version>.exe` from [Releases](https://github.com/oceanfromthewave/tokenGrove/releases/latest) and run it.
+The installer is not code-signed, so Windows SmartScreen may show a warning. Choose "More info" and then "Run anyway".
+
 ## Getting started
 
 Requirements: Windows and Node.js 22 or newer (the tests rely on Node running `.ts` files directly).
@@ -61,10 +66,8 @@ npm run dev
 To build an installer:
 
 ```powershell
-npm run build:win      # dist\Token Grove-Setup-<version>.exe
+npm run build:win      # dist\TokenGrove-Setup-<version>.exe
 ```
-
-The installer is not code-signed, so Windows SmartScreen may show a warning. Choose "More info" and then "Run anyway".
 
 ### Development commands
 
@@ -100,4 +103,4 @@ src/
 
 ## License
 
-Not decided yet.
+[MIT](LICENSE)

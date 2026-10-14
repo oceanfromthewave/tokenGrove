@@ -1,6 +1,6 @@
 {
   "name": "tokengrove",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "AI 사용 기록으로 키우는 도트 펫",
   "main": "./out/main/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "Token Grove",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",

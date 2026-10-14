@@ -27,6 +27,8 @@ const api = {
         ipcRenderer.on('settings:changed', handler)
         return () => ipcRenderer.removeListener('settings:changed', handler)
     },
+    exportGarden: (rect: { x: number; y: number; width: number; height: number }): Promise<'saved' | 'canceled' | 'error'> =>
+        ipcRenderer.invoke('garden:export', rect),
     dragStart: (): void => ipcRenderer.send('pet:dragStart'),
     dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),
     dragEnd: (): void => ipcRenderer.send('pet:dragEnd'),

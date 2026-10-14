@@ -1,12 +1,15 @@
-import {app, BrowserWindow, ipcMain, Menu, Notification, screen} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, screen, Tray} from 'electron'
+import {writeFile} from 'fs/promises'
 import {join} from 'path'
 import {INITIAL_PET, SPECIES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
+import {parseRect} from '../shared/exportRect'
 import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '../shared/settings'
 import {EMPTY_SAVE} from '../shared/save'
 import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
 import {TOKENS_PER_XP, applyUsage, type CollectStatus, type UsageRecord} from '../shared/usage'
 import {loadSave, writeSave} from './store'
+import {TRAY_ICON} from './trayIcon'
 import {defaultClaudeRoot, defaultCodexRoot, scanClaudeLogs, scanCodexLogs, type Offsets} from './claudeLogs'
 
 const TEST_PROVIDER = 'test'
@@ -23,6 +26,7 @@ let status: CollectStatus = {lastCheckedAt: null, gainedXp: 0, tools: {claude: 0
 let petPos: { x: number; y: number } | null = null
 let gardenWin: BrowserWindow | null = null
 let petWin: BrowserWindow | null = null
+let tray: Tray | null = null
 let dragOrigin: Electron.Rectangle | null = null // 펫 끌기를 시작할 때의 창 위치
 
 function loadView(win: BrowserWindow, view: 'pet' | 'garden'): void {
@@ -52,6 +56,7 @@ function showPetMenu(win: BrowserWindow): void {
     const login = app.getLoginItemSettings().openAtLogin
     Menu.buildFromTemplate([
         {label: '정원 열기', click: openGarden},
+        {label: '숨기기 (트레이에서 다시 열기)', click: () => win.hide()},
         {type: 'separator'},
         {
             label: 'Windows 시작 시 자동 실행',
@@ -63,6 +68,30 @@ function showPetMenu(win: BrowserWindow): void {
         {type: 'separator'},
         {label: '종료', click: () => app.quit()}
     ]).popup({window: win})
+}
+
+function togglePet(): void {
+    if (!petWin) return
+    if (petWin.isVisible()) {
+        petWin.hide()
+    } else {
+        petWin.show()
+    }
+}
+
+function createTray(): void {
+    const icon = nativeImage.createFromDataURL(TRAY_ICON).resize({width: 16, height: 16})
+    tray = new Tray(icon)
+    tray.setToolTip('Token Grove')
+    const menu = (): Menu =>
+        Menu.buildFromTemplate([
+            {label: petWin?.isVisible() ? '펫 숨기기' : '펫 보이기', click: togglePet},
+            {label: '정원 열기', click: openGarden},
+            {type: 'separator'},
+            {label: '종료', click: () => app.quit()}
+        ])
+    tray.on('click', togglePet)
+    tray.on('right-click', () => tray?.popUpContextMenu(menu()))
 }
 
 function createPetWindow(): void {
@@ -209,6 +238,28 @@ ipcMain.handle('pet:addTestXp', () => {
 })
 ipcMain.on('garden:open', openGarden)
 
+// 정원 풍경을 PNG로 저장한다. 파일 위치는 사용자가 저장 창에서 직접 고른다.
+// 렌더러가 보내는 캡처 영역은 검증하고, 정원 창에서 온 요청만 받는다.
+ipcMain.handle('garden:export', async (e, rectInput: unknown): Promise<'saved' | 'canceled' | 'error'> => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const rect = parseRect(rectInput)
+    if (!win || win !== gardenWin || !rect) return 'error'
+    try {
+        const image = await win.webContents.capturePage(rect)
+        const {canceled, filePath} = await dialog.showSaveDialog(win, {
+            title: '정원 사진 저장',
+            defaultPath: join(app.getPath('pictures'), `TokenGrove-${dateKey(new Date())}.png`),
+            filters: [{name: 'PNG 이미지', extensions: ['png']}]
+        })
+        if (canceled || !filePath) return 'canceled'
+        await writeFile(filePath.toLowerCase().endsWith('.png') ? filePath : filePath + '.png', image.toPNG())
+        return 'saved'
+    } catch (err) {
+        console.error('정원 사진 저장 실패:', err instanceof Error ? err.message : err)
+        return 'error'
+    }
+})
+
 // 펫 끌기. 'CSS 드래그 영역'을 쓰면 우클릭 메뉴가 안 뜨므로, 화면(renderer)이 이동량만 보내고 main이 창을 옮긴다.
 ipcMain.on('pet:dragStart', (e) => {
     if (e.sender === petWin?.webContents) dragOrigin = petWin.getBounds()
@@ -238,6 +289,7 @@ app.whenReady().then(() => {
     petPos = save.petWindow
     settle() // 저장된 레벨이 이미 완성 기준을 넘었으면 바로 정원에 보관
     createPetWindow()
+    createTray()
     pollLogs()
     setInterval(pollLogs, POLL_MS)
 })

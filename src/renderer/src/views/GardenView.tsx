@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
 import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
@@ -44,6 +44,20 @@ function GardenView(): React.JSX.Element {
     const {pet, collection, stats} = useGame()
     const status = useStatus()
     const [selected, setSelected] = useState<SpeciesId | null>(null)
+    const root = useRef<HTMLDivElement>(null)
+    const sceneRef = useRef<HTMLDivElement>(null)
+    const [toast, setToast] = useState('')
+
+    // 풍경 부분을 PNG로 저장한다. 스크롤이 내려가 있으면 풍경이 화면 밖이라 먼저 맨 위로 올린다.
+    const savePhoto = async (): Promise<void> => {
+        root.current?.scrollTo({top: 0})
+        await new Promise((r) => requestAnimationFrame(() => r(null)))
+        const box = sceneRef.current?.getBoundingClientRect()
+        if (!box) return
+        const result = await window.api.exportGarden({x: box.x, y: box.y, width: box.width, height: box.height})
+        setToast(result === 'saved' ? '사진을 저장했어요' : result === 'error' ? '저장하지 못했어요' : '')
+        if (result !== 'canceled') setTimeout(() => setToast(''), 2500)
+    }
     const stage = stageOf(pet.level)
     const nextStage = STAGES.find((s) => s.minLevel > stage.minLevel)
     const need = xpToNextLevel(pet.level)
@@ -68,8 +82,8 @@ function GardenView(): React.JSX.Element {
     const picked = selected ? owned.get(selected) : undefined
 
     return (
-        <div className="garden">
-            <div className={`scene ${tod} w-${weather}`}>
+        <div className="garden" ref={root}>
+            <div className={`scene ${tod} w-${weather}`} ref={sceneRef}>
                 <div className="sun">{tod === 'night' && <PixelArt rows={MOON} colors={MOON_COLORS} scale={4}/>}</div>
                 <div className="stars"/>
                 <div className="cloud c1"/>
@@ -109,7 +123,11 @@ function GardenView(): React.JSX.Element {
             </div>
 
             <div className="panel">
-                <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                <div className="name-row">
+                    <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                    <button className="photo-btn" onClick={savePhoto}>사진 저장</button>
+                </div>
+                {toast && <div className="toast">{toast}</div>}
                 <div className="bar" title={`${formatXp(pet.xp)}/${need} XP`}>
                     <div className="bar-fill" style={{width: `${(pet.xp / need) * 100}%`}}/>
                 </div>
