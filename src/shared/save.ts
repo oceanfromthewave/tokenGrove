@@ -1,5 +1,6 @@
 import {INITIAL_PET, addXp, isSpeciesId, type Completed, type PetState} from './growth.ts'
 import {DEFAULT_SETTINGS, parseSettings, type Settings} from './settings.ts'
+import {parseVersion} from './version.ts'
 import {EMPTY_STATS, type Stats} from './stats.ts'
 
 // 디스크에 저장하는 데이터 형식. 파일은 외부에서 바뀌거나 깨질 수 있으니 읽을 때 반드시 검증한다.
@@ -10,10 +11,11 @@ export interface SaveData {
     collection: Completed[] // 완성되어 정원에 보관된 식물
     stats: Stats // 경험치 통계
     settings: Settings // 사용자 설정
+    skippedVersion: string | null // "이 버전 건너뛰기"를 누른 업데이트 버전
     logOffsets: Record<string, number> | null // Claude Code 로그별 읽은 위치. null = 아직 기준선 없음(첫 실행)
 }
 
-export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, settings: DEFAULT_SETTINGS, logOffsets: null}
+export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, settings: DEFAULT_SETTINGS, skippedVersion: null, logOffsets: null}
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
@@ -58,7 +60,7 @@ export function parseSave(text: string): SaveData {
         const best = raw.stats?.bestStreak
         const bestStreak = Number.isInteger(best) && best >= 0 && best <= 100_000 ? best : 0
         // 레벨 기준보다 xp가 크면 레벨업으로 정리
-        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), logOffsets}
+        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), skippedVersion: parseVersion(raw.skippedVersion) ? (raw.skippedVersion as string).replace(/^v/, '') : null, logOffsets}
     } catch {
         return EMPTY_SAVE
     }

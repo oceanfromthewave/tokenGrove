@@ -5,10 +5,11 @@ export interface Settings {
     claude: boolean // Claude Code 로그 수집
     codex: boolean // Codex 로그 수집
     notifications: boolean // 단계 성장/식물 완성 알림
+    updateCheck: boolean // 새 버전이 있는지 GitHub에 물어보기
     speed: Speed // 성장 속도 (경험치 환산 배율)
 }
 
-export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, speed: 'normal'}
+export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, updateCheck: true, speed: 'normal'}
 
 // 경험치 환산 배율. 사용량이 적은 사람은 빠르게, 많은 사람은 느리게 고를 수 있다.
 export const SPEED_MULTIPLIER: Record<Speed, number> = {slow: 0.5, normal: 1, fast: 2}
@@ -26,6 +27,7 @@ export function mergeSettings(current: Settings, patch: unknown): Settings {
         claude: typeof own('claude') === 'boolean' ? (own('claude') as boolean) : current.claude,
         codex: typeof own('codex') === 'boolean' ? (own('codex') as boolean) : current.codex,
         notifications: typeof own('notifications') === 'boolean' ? (own('notifications') as boolean) : current.notifications,
+        updateCheck: typeof own('updateCheck') === 'boolean' ? (own('updateCheck') as boolean) : current.updateCheck,
         speed: isSpeed(own('speed')) ? (own('speed') as Speed) : current.speed
     }
 }

@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, screen, Tray} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
 import {writeFile} from 'fs/promises'
 import {join} from 'path'
 import {INITIAL_PET, SPECIES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
@@ -10,6 +10,7 @@ import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
 import {TOKENS_PER_XP, applyUsage, type CollectStatus, type UsageRecord} from '../shared/usage'
 import {loadSave, writeSave} from './store'
 import {TRAY_ICON} from './trayIcon'
+import {RELEASES_API, isNewer, parseLatestRelease} from '../shared/version'
 import {defaultClaudeRoot, defaultCodexRoot, scanClaudeLogs, scanCodexLogs, type Offsets} from './claudeLogs'
 
 const TEST_PROVIDER = 'test'
@@ -27,6 +28,8 @@ let petPos: { x: number; y: number } | null = null
 let gardenWin: BrowserWindow | null = null
 let petWin: BrowserWindow | null = null
 let tray: Tray | null = null
+let skippedVersion: string | null = null // "건너뛰기"를 누른 업데이트 버전
+let askedVersion: string | null = null // 이번 실행에서 이미 물어본 버전 (같은 버전을 반복해서 묻지 않는다)
 let dragOrigin: Electron.Rectangle | null = null // 펫 끌기를 시작할 때의 창 위치
 
 function loadView(win: BrowserWindow, view: 'pet' | 'garden'): void {
@@ -48,7 +51,49 @@ function visiblePos(pos: { x: number; y: number } | null, w: number, h: number):
 }
 
 function persist(): void {
-    writeSave({pet, petWindow: petPos, processed, collection, stats, settings, logOffsets})
+    writeSave({pet, petWindow: petPos, processed, collection, stats, settings, skippedVersion, logOffsets})
+}
+
+// 새 버전 확인. GitHub의 '최신 릴리스' 정보만 받아오고(사용 기록 등은 보내지 않는다), 새 버전이면 물어본다.
+// 업데이트를 고르면 다운로드 페이지를 브라우저로 연다. 설치 파일을 받아 실행하면 저장 데이터는 그대로 유지된다.
+async function checkForUpdate(manual: boolean): Promise<void> {
+    if (!manual && !settings.updateCheck) return
+    const current = app.getVersion()
+    try {
+        const res = await net.fetch(RELEASES_API, {
+            headers: {'User-Agent': 'TokenGrove', Accept: 'application/vnd.github+json'},
+            signal: AbortSignal.timeout(8000)
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const latest = parseLatestRelease(await res.json())
+        if (!latest) throw new Error('응답 형식이 올바르지 않음')
+
+        if (!isNewer(latest.version, current)) {
+            if (manual) await dialog.showMessageBox({type: 'info', title: 'Token Grove', message: '최신 버전을 쓰고 있어요', detail: `현재 v${current}`})
+            return
+        }
+        // 자동 확인은 건너뛴 버전과 이미 물어본 버전은 다시 묻지 않는다. 직접 확인(manual)은 항상 보여준다.
+        if (!manual && (latest.version === skippedVersion || latest.version === askedVersion)) return
+        askedVersion = latest.version
+
+        const {response} = await dialog.showMessageBox({
+            type: 'info',
+            title: '새 버전이 있어요',
+            message: `새 버전 v${latest.version}이 나왔어요. 업데이트 하시겠어요?`,
+            detail: `현재 v${current}\n\n업데이트를 누르면 다운로드 페이지가 열려요. 설치 파일을 받아 실행하면 저장된 펫과 도감은 그대로 유지돼요.`,
+            buttons: ['업데이트 (다운로드 페이지 열기)', '나중에', '이 버전 건너뛰기'],
+            defaultId: 0,
+            cancelId: 1
+        })
+        if (response === 0) await shell.openExternal(latest.url) // parseLatestRelease가 우리 저장소의 릴리스 주소만 통과시킨다
+        if (response === 2) {
+            skippedVersion = latest.version
+            persist()
+        }
+    } catch (err) {
+        console.error('업데이트 확인 실패:', err instanceof Error ? err.message : err)
+        if (manual) await dialog.showMessageBox({type: 'warning', title: 'Token Grove', message: '업데이트를 확인하지 못했어요', detail: '인터넷 연결을 확인하고 잠시 뒤에 다시 시도해 주세요.'})
+    }
 }
 
 // 펫 우클릭 메뉴. 종료와 자동 실행 설정을 여기서 제공한다. (자동 실행은 기본 꺼짐, 사용자가 직접 켠다)
@@ -57,6 +102,7 @@ function showPetMenu(win: BrowserWindow): void {
     Menu.buildFromTemplate([
         {label: '정원 열기', click: openGarden},
         {label: '숨기기 (트레이에서 다시 열기)', click: () => win.hide()},
+        {label: '업데이트 확인', click: () => void checkForUpdate(true)},
         {type: 'separator'},
         {
             label: 'Windows 시작 시 자동 실행',
@@ -87,6 +133,7 @@ function createTray(): void {
         Menu.buildFromTemplate([
             {label: petWin?.isVisible() ? '펫 숨기기' : '펫 보이기', click: togglePet},
             {label: '정원 열기', click: openGarden},
+            {label: '업데이트 확인', click: () => void checkForUpdate(true)},
             {type: 'separator'},
             {label: '종료', click: () => app.quit()}
         ])
@@ -284,6 +331,7 @@ app.whenReady().then(() => {
     collection = save.collection
     stats = save.stats
     settings = save.settings
+    skippedVersion = save.skippedVersion
     processed = save.processed
     logOffsets = save.logOffsets
     petPos = save.petWindow
@@ -292,6 +340,8 @@ app.whenReady().then(() => {
     createTray()
     pollLogs()
     setInterval(pollLogs, POLL_MS)
+    setTimeout(() => void checkForUpdate(false), 15_000) // 시작 직후에는 펫이 자리 잡도록 잠깐 기다린다
+    setInterval(() => void checkForUpdate(false), 6 * 60 * 60 * 1000)
 })
 
 app.on('window-all-closed', () => {

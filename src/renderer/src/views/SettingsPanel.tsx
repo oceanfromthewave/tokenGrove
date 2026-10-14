@@ -33,6 +33,13 @@ function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): R
                 </span>
                 <input type="checkbox" checked={settings.notifications} onChange={(e) => update({notifications: e.target.checked})}/>
             </label>
+            <label className="set-row">
+                <span>
+                    <b>업데이트 확인</b>
+                    <small>새 버전이 있는지 GitHub에 물어봐요 (사용 기록은 보내지 않아요)</small>
+                </span>
+                <input type="checkbox" checked={settings.updateCheck} onChange={(e) => update({updateCheck: e.target.checked})}/>
+            </label>
             <div className="set-row">
                 <span>
                     <b>성장 속도</b>

@@ -10,7 +10,9 @@ assert.deepEqual(parseSettings([1, 2]), DEFAULT_SETTINGS)
 
 // 올바른 항목만 반영하고 나머지는 유지
 assert.deepEqual(parseSettings({codex: false, speed: 'fast'}), {...DEFAULT_SETTINGS, codex: false, speed: 'fast'})
-assert.deepEqual(parseSettings({claude: 'no', speed: 'turbo', notifications: 1}), DEFAULT_SETTINGS)
+assert.deepEqual(parseSettings({claude: 'no', speed: 'turbo', notifications: 1, updateCheck: 'yes'}), DEFAULT_SETTINGS)
+assert.equal(DEFAULT_SETTINGS.updateCheck, true)
+assert.equal(parseSettings({updateCheck: false}).updateCheck, false)
 
 // 부분 변경(IPC 패치): 현재 값을 유지하고, 모르는 키는 무시, 원본은 바뀌지 않는다
 const cur = {...DEFAULT_SETTINGS, speed: 'slow' as const}
