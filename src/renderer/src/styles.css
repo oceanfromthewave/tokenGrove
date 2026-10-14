@@ -193,21 +193,79 @@ body,
   }
 }
 
-.status {
-  font: 12px sans-serif;
-  color: #fff;
-  text-shadow: 0 0 3px #000, 0 0 3px #000; /* 투명 배경 위에서도 읽히게 */
+/* 이름/레벨 표시판 + 경험치 막대. 투명 배경 위에서도 읽히도록 어두운 판 위에 둔다. */
+.plate {
+  width: 116px;
+  padding: 3px 6px 4px;
+  text-align: center;
+  background: rgba(20, 40, 28, 0.82);
+  border: 2px solid #2a1c12;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
-.test-btn {
-  font: 12px sans-serif;
-  padding: 2px 8px;
-  cursor: pointer;
+.status {
+  font: bold 11px sans-serif;
+  color: #fffbe8;
+}
+
+.xpbar {
+  height: 6px;
+  margin: 3px 0 2px;
+  background: #0f1d15;
+  border: 1px solid #2a1c12;
+}
+
+.xpbar i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #8fd36b 0 4px, #6bbf59 4px 6px); /* 도트처럼 칸이 나뉜 막대 */
+}
+
+.xptext {
+  font: 10px sans-serif;
+  color: #cfe8c4;
 }
 
 .row {
   display: flex;
-  gap: 4px;
+  gap: 6px;
+}
+
+/* 도트 느낌의 입체 버튼. 눌리면 한 칸 내려간다. */
+.pbtn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px 3px 5px;
+  font: bold 11px sans-serif;
+  color: #fffbe8;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+  border: 2px solid #2a1c12;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.pbtn.green {
+  background: #4f9a40;
+  box-shadow: inset 2px 2px 0 #7fd06a, inset -2px -2px 0 #3a7a30, 0 2px 0 #2a1c12;
+}
+
+.pbtn.gold {
+  background: #c9902c;
+  box-shadow: inset 2px 2px 0 #f0c25a, inset -2px -2px 0 #9a6c1c, 0 2px 0 #2a1c12;
+}
+
+.pbtn:hover {
+  filter: brightness(1.12);
+}
+
+.pbtn:active {
+  transform: translateY(2px);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25), 0 0 0 #2a1c12;
+}
+
+.pbtn svg {
+  flex: none;
 }
 
 /* 정원 화면 */

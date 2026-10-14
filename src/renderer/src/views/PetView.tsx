@@ -17,6 +17,11 @@ interface Burst {
 const HEART = ['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..']
 const HEART_COLORS = {r: '#ff6b8a'}
 
+// 버튼 안의 작은 도트 아이콘
+const SPARKLE = ['...y...', '...y...', '..yyy..', 'yyyyyyy', '..yyy..', '...y...', '...y...']
+const SPROUT = ['..g.g..', '.ggggg.', '..ggg..', '...t...', '...t...', '.mmmmm.']
+const ICON_COLORS = {y: '#fff1a8', g: '#d8ffb0', t: '#8a5a2b', m: '#6e4b2a'}
+
 // 레벨업/성장 때 사방으로 튀는 반짝이 8개의 이동 방향
 const SPARKS = Array.from({length: 8}, (_, i) => {
     const a = (i * Math.PI) / 4
@@ -107,12 +112,20 @@ function PetView(): React.JSX.Element {
                 ))}
                 {burst?.kind === 'xp' && <div key={`g${burst.id}`} className="gain">+{formatXp(burst.gain)}</div>}
             </div>
-            <div className="status">
-                {stage.name} Lv.{pet.level} · {formatXp(pet.xp)}/{xpToNextLevel(pet.level)} XP
+            <div className="plate">
+                <div className="status">{stage.name} Lv.{pet.level}</div>
+                <div className="xpbar" title={`${formatXp(pet.xp)} / ${xpToNextLevel(pet.level)} XP`}>
+                    <i style={{width: `${Math.min(100, (pet.xp / xpToNextLevel(pet.level)) * 100)}%`}}/>
+                </div>
+                <div className="xptext">{formatXp(pet.xp)} / {xpToNextLevel(pet.level)} XP</div>
             </div>
             <div className="row">
-                <button className="test-btn" onClick={() => window.api.addTestXp()}>+XP</button>
-                <button className="test-btn" onClick={() => window.api.openGarden()}>정원</button>
+                <button className="pbtn gold" title="경험치 테스트 (+30 XP)" onClick={() => window.api.addTestXp()}>
+                    <PixelArt rows={SPARKLE} colors={ICON_COLORS} scale={2}/>XP
+                </button>
+                <button className="pbtn green" title="정원 열기" onClick={() => window.api.openGarden()}>
+                    <PixelArt rows={SPROUT} colors={ICON_COLORS} scale={2}/>정원
+                </button>
             </div>
         </div>
     )
