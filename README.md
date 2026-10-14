@@ -1,99 +1,101 @@
 # Token Grove
 
-AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 앱입니다.
-평소처럼 Claude Code를 쓰면 바탕화면 위 작은 화분이 알아서 자랍니다. 따로 누를 것은 없습니다.
+*[한국어](README.ko.md)*
+
+A Windows desktop app that grows a pixel-art plant from your AI coding usage.
+Use Claude Code as you normally do and a small flower pot on your desktop grows by itself. There is nothing to click.
 
 <p align="center">
-  <img src="docs/sprite-preview.png" width="720" alt="10종 x 10단계 도트 식물">
+  <img src="docs/sprite-preview.png" width="720" alt="10 species x 10 growth stages of pixel plants">
 </p>
 
-## 어떻게 동작하나요
+## How it works
 
-- **펫 창**: 투명한 작은 창에 화분이 떠 있습니다. 끌어서 옮길 수 있고 다른 창 위에 항상 보입니다.
-- **정원 창**: 펫 창의 `정원` 버튼으로 엽니다. 현재 식물의 레벨과 경험치, 성장 기록, 완성한 식물 도감을 볼 수 있습니다.
-- **성장**: Claude Code가 남기는 로그에서 토큰 수만 읽어 경험치로 바꿉니다. 30초마다 새로 추가된 부분만 확인합니다.
-- **완성**: 레벨 11에 도달하면 식물이 정원 도감에 보관되고, 새 씨앗이 무작위 종으로 시작됩니다.
+- **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows.
+- **Garden window**: open it with the `정원` (garden) button on the pet window. It shows the current plant's level and XP, its growth history, and a collection of the plants you have finished.
+- **Growth**: the app reads only token counts from the logs Claude Code writes and turns them into XP. It checks for new log lines every 30 seconds.
+- **Completion**: at level 11 the plant is stored in the garden collection and a new seed of a random species starts.
 
-### 성장 단계 (10단계)
+### Growth stages (10)
 
-씨앗 → 싹 → 새싹 → 어린 잎 → 무성한 잎 → 꽃봉오리 → 첫 꽃 → 만개 → 열매 → 큰 나무
+seed → sprout → seedling → young leaves → leafy → bud → first bloom → full bloom → fruit → big tree
 
-레벨 1~10이 각각 한 단계이고, 한 개체가 완성되기까지 평소 사용량 기준 약 한 달을 목표로 잡았습니다.
+Each of levels 1 to 10 is one stage. A full plant is tuned to take about a month at typical usage.
 
-### 식물 종 (10종)
+### Species (10)
 
-데이지, 해바라기, 튤립, 도라지, 장미, 라벤더, 수국, 양귀비, 코스모스, 벚꽃.
-씨앗 단계는 모든 종이 같아서 싹이 틀 때까지 무슨 종인지 알 수 없습니다.
+Daisy, sunflower, tulip, balloon flower, rose, lavender, hydrangea, poppy, cosmos, cherry blossom.
+The seed stage looks the same for every species, so you cannot tell which one you got until it sprouts.
 
-### 경험치 계산
+### How XP is calculated
 
 ```
-경험치 = (입력 토큰 + 출력 토큰 × 5) ÷ 30,000
+XP = (input tokens + output tokens x 5) / 30,000
 ```
 
-- 입력 토큰은 `input_tokens + cache_creation_input_tokens` 입니다.
-- 캐시를 다시 읽은 토큰(`cache_read_input_tokens`)은 세지 않습니다. 같은 문맥을 매번 다시 읽는 값이라 포함하면 사용량이 지나치게 부풀기 때문입니다.
-- 같은 응답이 로그에 여러 줄로 기록되므로 `message.id`와 `requestId`로 중복을 제거합니다.
-- 앱을 처음 실행하기 전에 쌓인 기록은 경험치로 반영하지 않습니다. 처음에는 현재 위치만 기억합니다.
+- Input tokens are `input_tokens + cache_creation_input_tokens`.
+- Cache reads (`cache_read_input_tokens`) are not counted. They re-read the same context on every turn, so counting them would inflate usage far beyond the work actually done.
+- The same response is logged on several lines, so records are de-duplicated by `message.id` and `requestId`.
+- Usage recorded before the first launch is not rewarded. On the first run the app only remembers where each log file currently ends.
 
-변환 규칙은 [`src/shared/usage.ts`](src/shared/usage.ts)에 모여 있습니다.
+The conversion rules live in [`src/shared/usage.ts`](src/shared/usage.ts).
 
-## 개인정보
+## Privacy
 
-- 모든 처리는 내 PC 안에서만 이루어지며 외부로 전송하는 것이 없습니다.
-- 로그에서는 기록 ID, 시각, 토큰 숫자만 꺼냅니다. 프롬프트나 대화 내용, 코드는 저장하지도 출력하지도 않습니다.
-- 원본 로그(`~/.claude/projects/**/*.jsonl`)는 읽기만 하고 수정하지 않습니다.
-- 저장 파일은 `%APPDATA%\tokengrove\save.json` 하나뿐입니다.
+- Everything stays on your PC. Nothing is sent anywhere.
+- From the logs the app extracts only the record ID, timestamp and token numbers. Prompts, conversation text and code are never stored or printed.
+- The original logs (`~/.claude/projects/**/*.jsonl`) are only read, never modified.
+- The only file the app writes is `%APPDATA%\tokengrove\save.json`.
 
-## 실행하기
+## Getting started
 
-요구 사항: Windows, Node.js 22 이상 (Node가 `.ts` 파일을 직접 실행하는 기능을 테스트에 사용합니다).
+Requirements: Windows and Node.js 22 or newer (the tests rely on Node running `.ts` files directly).
 
 ```powershell
 npm install
 npm run dev
 ```
 
-설치 파일을 만들려면:
+To build an installer:
 
 ```powershell
-npm run build:win      # dist\Token Grove-Setup-<버전>.exe
+npm run build:win      # dist\Token Grove-Setup-<version>.exe
 ```
 
-코드 서명이 없어서 Windows SmartScreen이 경고할 수 있습니다. "추가 정보 → 실행"으로 진행하면 됩니다.
+The installer is not code-signed, so Windows SmartScreen may show a warning. Choose "More info" and then "Run anyway".
 
-### 개발 명령
+### Development commands
 
-| 명령 | 설명 |
+| Command | Description |
 |---|---|
-| `npm run dev` | 개발 모드로 실행 |
-| `npm run typecheck` | TypeScript 타입 검사 |
-| `npm test` | 테스트 (Node 내장 테스트 러너) |
-| `npm run preview:sprites` | 모든 종 × 단계 스프라이트를 PNG 한 장으로 렌더 |
-| `npm run build:unpack` | 설치 없이 `dist\win-unpacked`로 패키징 |
+| `npm run dev` | Run in development mode |
+| `npm run typecheck` | Type-check with TypeScript |
+| `npm test` | Run the tests (Node's built-in test runner) |
+| `npm run preview:sprites` | Render every species x stage sprite into a single PNG |
+| `npm run build:unpack` | Package into `dist\win-unpacked` without an installer |
 
-## 구조
+## Structure
 
 ```
 src/
-├─ shared/     순수 로직. Electron에 의존하지 않고 테스트를 옆에 둔다.
-│              growth(레벨·단계·종·완성), usage(기록 모델·경험치·중복 방지),
-│              claudeCode(로그 한 줄 변환), save(저장 파일 검증), sprites(도트 그림)
-├─ main/       창 관리, 펫 상태의 단일 출처, 저장, 로그 증분 읽기
-├─ preload/    렌더러에 노출하는 제한된 API
-└─ renderer/   React 화면 (펫 창, 정원 창)
+├─ shared/     Pure logic with no Electron dependency; tests sit next to it.
+│              growth (levels, stages, species, completion), usage (record model, XP, de-duplication),
+│              claudeCode (log line to record), save (save-file validation), sprites (pixel art)
+├─ main/       Window management, the single source of truth for pet state, saving, incremental log reading
+├─ preload/    The small, explicit API exposed to the renderer
+└─ renderer/   React UI (pet window and garden window)
 ```
 
-- 사용 기록 수집부와 게임 규칙을 분리했습니다. 다른 AI 도구를 추가하려면 로그를 공통 형식 `UsageRecord`로 바꾸는 변환부만 만들면 됩니다.
-- 렌더러는 파일 시스템이나 Electron의 권한 있는 API를 직접 호출하지 않고, preload가 노출한 함수만 사용합니다.
-- 도트 그림은 왼쪽 절반만 만들고 좌우로 복사해서 항상 대칭입니다.
+- Usage collection and game rules are separate. To support another AI tool, you only need an adapter that converts its logs into the common `UsageRecord` format.
+- The renderer never touches the file system or privileged Electron APIs directly; it only uses the functions exposed by the preload script.
+- Pixel art is authored as the left half only and mirrored, so every plant is perfectly symmetric.
 
-## 현재 한계
+## Current limitations
 
-- 지원하는 로그는 **Claude Code**뿐입니다. Codex 등은 아직 연동하지 않았습니다.
-- Windows에서만 확인했습니다. 자동 실행 설정은 아직 없습니다.
-- 경험치 환산 비율은 개발자 PC의 사용량으로 정한 값이라 사람에 따라 성장 속도가 다를 수 있습니다.
+- **Claude Code** is the only supported log source. Codex and others are not connected yet.
+- Tested on Windows only. There is no launch-at-login option yet.
+- The XP conversion rate was tuned to the author's own usage, so growth speed will vary from person to person.
 
-## 라이선스
+## License
 
-아직 정하지 않았습니다.
+Not decided yet.
