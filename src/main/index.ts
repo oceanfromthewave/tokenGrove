@@ -96,9 +96,9 @@ function createTray(): void {
 
 function createPetWindow(): void {
     const win = new BrowserWindow({
-        width: 140,
-        height: 224,
-        ...visiblePos(petPos, 140, 224),
+        width: 160,
+        height: 268,
+        ...visiblePos(petPos, 160, 268),
         frame: false, // 제목 표시줄 제거
         transparent: true, // 배경 투명
         resizable: false,

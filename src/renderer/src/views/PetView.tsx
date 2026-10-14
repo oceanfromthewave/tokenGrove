@@ -80,7 +80,7 @@ function PetView(): React.JSX.Element {
                 if (Math.hypot(e.screenX - start.x, e.screenY - start.y) < 5) {
                     const now = new Date()
                     const todayXp = stats.daily[dateKey(now)] ?? 0
-                    setChat({id: Date.now(), text: pickChatter({pet, todayXp, streak: currentStreak(stats, now), hour: now.getHours()})})
+                    setChat({id: Date.now(), text: pickChatter({pet, todayXp, streak: currentStreak(stats, now), hour: now.getHours(), weekday: now.getDay()})})
                 }
             }}
         >
