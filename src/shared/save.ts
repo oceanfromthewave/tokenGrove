@@ -53,8 +53,10 @@ export function parseSave(text: string): SaveData {
             }
         }
         const totalXp = isNum(raw.stats?.totalXp) && raw.stats.totalXp >= 0 ? raw.stats.totalXp : 0
+        const best = raw.stats?.bestStreak
+        const bestStreak = Number.isInteger(best) && best >= 0 && best <= 100_000 ? best : 0
         // 레벨 기준보다 xp가 크면 레벨업으로 정리
-        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily}, logOffsets}
+        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, logOffsets}
     } catch {
         return EMPTY_SAVE
     }

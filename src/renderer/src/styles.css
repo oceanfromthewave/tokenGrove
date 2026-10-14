@@ -41,8 +41,11 @@ body,
 
 /* 정원 화면 */
 .garden {
-  min-height: 100%;
+  height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4a8c3c #14281c;
   background: #1f3a2a;
   color: #e8f3e0;
   font-family: sans-serif;
@@ -322,7 +325,7 @@ body,
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
 }
@@ -438,4 +441,219 @@ body,
 
 .stages li.locked {
   opacity: 0.45;
+}
+
+/* 날씨: 오늘 사용량에 따라 바뀐다 */
+.weather {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.w-overcast .weather {
+  background: rgba(88, 98, 114, 0.45);
+}
+
+.night.w-overcast .weather {
+  background: rgba(88, 98, 114, 0.18); /* 밤에는 덜 덮어야 별과 반딧불이가 보인다 */
+}
+
+.w-cloudy .weather {
+  background: rgba(120, 130, 146, 0.16);
+}
+
+.w-overcast .sun {
+  opacity: 0.25;
+}
+
+.c3,
+.c4 {
+  display: none;
+  top: 40px;
+  left: -60px;
+  animation-duration: 75s;
+  animation-delay: -20s;
+  background: #dfe6ee;
+  box-shadow: 12px -12px 0 #dfe6ee, 24px -12px 0 #dfe6ee, 36px 0 0 #dfe6ee, 12px 0 0 #dfe6ee, 24px 0 0 #dfe6ee;
+}
+
+.c4 {
+  top: 150px;
+  animation-duration: 110s;
+  animation-delay: -70s;
+}
+
+.w-overcast .c3,
+.w-overcast .c4,
+.w-cloudy .c3 {
+  display: block;
+}
+
+.rainbow {
+  position: absolute;
+  left: 50%;
+  top: 76px;
+  line-height: 0;
+  opacity: 0.8;
+}
+
+/* 밤: 반딧불이와 별똥별 */
+.fly {
+  display: none;
+  position: absolute;
+  z-index: 3; /* 언덕과 울타리 앞에서 보이도록 */
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffef8a;
+  box-shadow: 0 0 6px 2px rgba(255, 239, 138, 0.8);
+  animation: glow 3s ease-in-out infinite, wander 9s ease-in-out infinite;
+}
+
+.night .fly {
+  display: block;
+}
+
+@keyframes glow {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes wander {
+  25% {
+    transform: translate(14px, -10px);
+  }
+  50% {
+    transform: translate(-6px, -18px);
+  }
+  75% {
+    transform: translate(-16px, 4px);
+  }
+}
+
+.shoot {
+  display: none;
+  position: absolute;
+  top: 40px;
+  left: 25%;
+  width: 56px;
+  height: 2px;
+  background: linear-gradient(90deg, #fff, transparent);
+  opacity: 0;
+  animation: shoot 14s linear infinite;
+}
+
+.night .shoot {
+  display: block;
+}
+
+@keyframes shoot {
+  0%,
+  90% {
+    opacity: 0;
+    transform: rotate(25deg) translateX(0);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(25deg) translateX(180px);
+  }
+}
+
+/* 낮: 벌과 울타리에 앉았다 날아가는 새 */
+.bee {
+  position: absolute;
+  top: 215px;
+  left: 0;
+  line-height: 0;
+  animation: bee 16s ease-in-out infinite;
+}
+
+.bird {
+  position: absolute;
+  left: 18%;
+  bottom: 119px;
+  line-height: 0;
+  opacity: 0;
+  animation: bird 26s ease-in-out infinite;
+}
+
+.night .bee,
+.night .bird {
+  display: none;
+}
+
+@keyframes bee {
+  0% {
+    transform: translate(30px, 0);
+  }
+  25% {
+    transform: translate(180px, 14px);
+  }
+  50% {
+    transform: translate(120px, -10px);
+  }
+  75% {
+    transform: translate(330px, 8px);
+  }
+  100% {
+    transform: translate(30px, 0);
+  }
+}
+
+@keyframes bird {
+  0% {
+    opacity: 0;
+  }
+  4%,
+  55% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  62% {
+    opacity: 1;
+    transform: translate(30px, -26px);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(360px, -100px);
+  }
+  90%,
+  100% {
+    opacity: 0;
+    transform: translate(380px, -110px);
+  }
+}
+
+/* 업적 */
+.badges {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  text-align: left;
+}
+
+.badge {
+  padding: 8px 10px;
+  background: #2d5a3d;
+  border-radius: 8px;
+  border-left: 4px solid #ffd84d;
+}
+
+.badge b {
+  display: block;
+  font-size: 13px;
+}
+
+.badge span {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.badge.locked {
+  opacity: 0.45;
+  border-left-color: #567a63;
 }

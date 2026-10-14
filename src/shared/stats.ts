@@ -4,9 +4,10 @@ import {STAGES, stageOf, xpToNextLevel, type PetState} from './growth.ts'
 export interface Stats {
     totalXp: number // 지금까지 로그에서 얻은 경험치 합계
     daily: Record<string, number> // 'YYYY-MM-DD' -> 그날 얻은 경험치 (최근 KEEP_DAYS일만 보관)
+    bestStreak: number // 가장 길었던 연속 사용일 (daily는 60일만 보관하므로 따로 저장)
 }
 
-export const EMPTY_STATS: Stats = {totalXp: 0, daily: {}}
+export const EMPTY_STATS: Stats = {totalXp: 0, daily: {}, bestStreak: 0}
 
 const KEEP_DAYS = 60
 const AVG_DAYS = 7
@@ -21,7 +22,33 @@ export function recordGain(stats: Stats, xp: number, today: string): Stats {
     const daily = {...stats.daily, [today]: (stats.daily[today] ?? 0) + xp}
     const keys = Object.keys(daily).sort()
     for (const k of keys.slice(0, Math.max(0, keys.length - KEEP_DAYS))) delete daily[k]
-    return {totalXp: stats.totalXp + xp, daily}
+    return {totalXp: stats.totalXp + xp, daily, bestStreak: Math.max(stats.bestStreak, streakEndingAt(daily, today))}
+}
+
+// key('YYYY-MM-DD')를 마지막 날로 하는 연속 사용일 수. 경험치를 얻은 날만 센다.
+export function streakEndingAt(daily: Record<string, number>, key: string): number {
+    const [y, m, d] = key.split('-').map(Number)
+    let n = 0
+    while ((daily[dateKey(new Date(y, m - 1, d - n))] ?? 0) > 0) n++
+    return n
+}
+
+// 지금 이어지고 있는 연속 사용일. 오늘 아직 안 썼어도 어제까지 이어졌다면 끊긴 게 아니다.
+export function currentStreak(stats: Stats, now: Date): number {
+    const today = streakEndingAt(stats.daily, dateKey(now))
+    if (today > 0) return today
+    return streakEndingAt(stats.daily, dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)))
+}
+
+export type Weather = 'overcast' | 'cloudy' | 'sunny' | 'rainbow'
+
+// 오늘 얻은 경험치를 최근 7일 평균과 비교해 정원 날씨를 정한다.
+// 평균이 없으면(처음 쓰는 중) 오늘 썼는지 여부로만 나눈다.
+export function weatherOf(todayXp: number, avg: number): Weather {
+    if (!(todayXp > 0)) return 'overcast'
+    if (avg <= 0) return 'sunny'
+    const ratio = todayXp / avg
+    return ratio >= 1.5 ? 'rainbow' : ratio >= 0.5 ? 'sunny' : 'cloudy'
 }
 
 // 최근 AVG_DAYS일(오늘 포함)의 하루 평균. 쉬는 날도 0으로 센다.

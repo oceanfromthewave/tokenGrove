@@ -1,11 +1,21 @@
 import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
-import {DECOR, DECOR_COLORS, type DecorId} from '../../../shared/decor'
+import {DECOR, DECOR_COLORS, RAINBOW_COLORS, rainbowRows, type DecorId} from '../../../shared/decor'
 import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
-import {dateKey, etaDays} from '../../../shared/stats'
+import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
+import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
 import {useGame, useStatus} from '../usePet'
 import SpeciesDetail from './SpeciesDetail'
+
+// 칸 단위로 만든 무지개 (한 번만 계산)
+const RAINBOW = rainbowRows()
+
+// 오늘 사용량에 따른 정원 날씨 이름
+const WEATHER_NAME: Record<Weather, string> = {overcast: '흐림', cloudy: '구름 조금', sunny: '맑음', rainbow: '무지개'}
+
+// 밤에 날아다니는 반딧불이: [가로 %, 세로 px, 움직임 지연 초]
+const FIREFLIES: [number, number, number][] = [[10, 190, 0], [24, 230, 2], [38, 200, 4], [55, 240, 1], [68, 205, 5], [80, 235, 3], [90, 195, 6]]
 
 // 시간대에 따라 하늘이 바뀐다. (6~18시 낮, 18~20시 노을, 그 외 밤)
 const timeOfDay = (hour: number): 'day' | 'dusk' | 'night' =>
@@ -37,6 +47,12 @@ function GardenView(): React.JSX.Element {
     const need = xpToNextLevel(pet.level)
     const now = new Date()
     const eta = etaDays(pet, stats, now)
+    const todayXp = stats.daily[dateKey(now)] ?? 0
+    const avg = avgDaily(stats, now)
+    const weather = weatherOf(todayXp, avg)
+    const streak = currentStreak(stats, now)
+    const got = achieved(pet, collection, stats)
+    const tod = timeOfDay(now.getHours())
 
     // 종별 완성 횟수와 마지막 완성 시각
     const owned = new Map<SpeciesId, { count: number; lastAt: string }>()
@@ -51,11 +67,20 @@ function GardenView(): React.JSX.Element {
 
     return (
         <div className="garden">
-            <div className={`scene ${timeOfDay(now.getHours())}`}>
+            <div className={`scene ${tod} w-${weather}`}>
                 <div className="sun"/>
                 <div className="stars"/>
                 <div className="cloud c1"/>
                 <div className="cloud c2"/>
+                <div className="cloud c3"/>
+                <div className="cloud c4"/>
+                {weather === 'rainbow' && tod !== 'night' && (
+                    <div className="rainbow"><PixelArt rows={RAINBOW} colors={RAINBOW_COLORS} scale={5}/></div>
+                )}
+                <div className="shoot"/>
+                {FIREFLIES.map(([x, y, delay], i) => (
+                    <div key={`ff${i}`} className="fly" style={{left: `${x}%`, top: y, animationDelay: `${delay}s, ${delay}s`}}/>
+                ))}
                 <div className="mtn"/>
                 <div className="mtn m2"/>
                 <div className="hill h1"/>
@@ -65,7 +90,6 @@ function GardenView(): React.JSX.Element {
                         <PixelArt rows={DECOR.pine} colors={DECOR_COLORS} scale={p.scale}/>
                     </div>
                 ))}
-                <h1>Token Grove</h1>
                 <div className="fence"/>
                 <div className="grass"/>
                 <div className="scene-pet">
@@ -76,6 +100,9 @@ function GardenView(): React.JSX.Element {
                         <PixelArt rows={DECOR[d.art]} colors={DECOR_COLORS} scale={d.scale ?? 3}/>
                     </div>
                 ))}
+                <div className="bird"><PixelArt rows={DECOR.bird} colors={DECOR_COLORS} scale={3}/></div>
+                <div className="bee"><PixelArt rows={DECOR.bee} colors={DECOR_COLORS} scale={3}/></div>
+                <div className="weather"/>
                 <div className="butterfly"><PixelArt rows={DECOR.butterfly} colors={DECOR_COLORS} scale={3}/></div>
             </div>
 
@@ -87,12 +114,17 @@ function GardenView(): React.JSX.Element {
                 <div className="bar-label">{formatXp(pet.xp)} / {need} XP</div>
 
                 <div className="stats">
-                    <div><b>{formatXp(stats.daily[dateKey(now)] ?? 0)}</b><span>오늘 XP</span></div>
+                    <div><b>{formatXp(todayXp)}</b><span>오늘 XP</span></div>
                     <div><b>{Math.floor(stats.totalXp).toLocaleString()}</b><span>누적 XP</span></div>
+                    <div><b>{streak}일</b><span>연속 사용</span></div>
                     <div>
                         <b>{nextStage ? (eta === null ? '-' : `${eta}일`) : '최종'}</b>
                         <span>{nextStage ? `${nextStage.name}까지` : '단계'}</span>
                     </div>
+                </div>
+                <div className="bar-label">
+                    정원 날씨 {WEATHER_NAME[weather]}
+                    {avg > 0 && ` · 오늘은 최근 7일 평균의 ${Math.round((todayXp / avg) * 100)}%`}
                 </div>
                 <div className="bar-label">
                     {status.lastCheckedAt === null
@@ -123,6 +155,16 @@ function GardenView(): React.JSX.Element {
                     <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt}/>
                 )}
                 {collection.length === 0 && <p className="empty">큰 나무까지 키워 완성하면 이곳에 심어져요.</p>}
+
+                <h2>업적 {got.size}/{ACHIEVEMENTS.length}</h2>
+                <div className="badges">
+                    {ACHIEVEMENTS.map((a) => (
+                        <div key={a.id} className={`badge${got.has(a.id) ? '' : ' locked'}`} title={a.desc}>
+                            <b>{got.has(a.id) ? a.name : '???'}</b>
+                            <span>{a.desc}</span>
+                        </div>
+                    ))}
+                </div>
 
                 <h2>성장 기록</h2>
                 <ul className="stages">
