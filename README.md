@@ -13,7 +13,7 @@ Use Claude Code as you normally do and a small flower pot on your desktop grows 
 
 ## How it works
 
-- **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows.
+- **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows. Right-click it for the menu (open the garden, launch at login, quit).
 - **Garden window**: open it with the `정원` (garden) button on the pet window. It shows the current plant's level and XP, its growth history, and a collection of the plants you have finished.
 - **Growth**: the app reads only token counts from the logs Claude Code writes and turns them into XP. It checks for new log lines every 30 seconds.
 - **Completion**: at level 11 the plant is stored in the garden collection and a new seed of a random species starts.
@@ -95,7 +95,7 @@ src/
 ## Current limitations
 
 - **Claude Code** is the only supported log source. Codex and others are not connected yet.
-- Tested on Windows only. There is no launch-at-login option yet.
+- Tested on Windows only.
 - The XP conversion rate was tuned to the author's own usage, so growth speed will vary from person to person.
 
 ## License

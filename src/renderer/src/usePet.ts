@@ -1,11 +1,12 @@
 import {useEffect, useState} from 'react'
 import {INITIAL_PET} from '../../shared/growth'
+import {EMPTY_STATS} from '../../shared/stats'
 import type {AppState} from '../../preload/index'
 import type {CollectStatus} from '../../shared/usage'
 
 // main이 가진 상태(현재 펫 + 정원 보관 목록)를 읽고, 변경될 때마다 갱신한다.
 export function useGame(): AppState {
-    const [state, setState] = useState<AppState>({pet: INITIAL_PET, collection: []})
+    const [state, setState] = useState<AppState>({pet: INITIAL_PET, collection: [], stats: EMPTY_STATS})
     useEffect(() => {
         window.api.getState().then(setState)
         return window.api.onStateChanged(setState)

@@ -1,52 +1,138 @@
+import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
-import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel} from '../../../shared/growth'
+import PixelArt from '../components/PixelArt'
+import {DECOR, DECOR_COLORS, type DecorId} from '../../../shared/decor'
+import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
+import {dateKey, etaDays} from '../../../shared/stats'
 import {useGame, useStatus} from '../usePet'
+import SpeciesDetail from './SpeciesDetail'
+
+// 시간대에 따라 하늘이 바뀐다. (6~18시 낮, 18~20시 노을, 그 외 밤)
+const timeOfDay = (hour: number): 'day' | 'dusk' | 'night' =>
+    hour >= 6 && hour < 18 ? 'day' : hour >= 18 && hour < 20 ? 'dusk' : 'night'
+
+// 언덕 위 소나무 (울타리 뒤, 언덕 능선을 따라)
+const PINES: { x: number; y: number; scale: number }[] = [
+    {x: 3, y: 124, scale: 3}, {x: 9, y: 132, scale: 4}, {x: 15, y: 122, scale: 3}, {x: 24, y: 118, scale: 3},
+    {x: 70, y: 120, scale: 3}, {x: 77, y: 128, scale: 4}, {x: 84, y: 121, scale: 3}, {x: 92, y: 126, scale: 4}
+]
+
+// 잔디 위 장식. x는 가로 위치(%), y는 바닥에서의 높이(px)
+const DECOR_SPOTS: { art: DecorId; x: number; y: number; scale?: number }[] = [
+    {art: 'bush', x: -2, y: 62, scale: 5}, {art: 'bush', x: 90, y: 66, scale: 5},
+    {art: 'tuft', x: 4, y: 40}, {art: 'flowerPink', x: 8, y: 22}, {art: 'flowerWhite', x: 14, y: 8}, {art: 'tuft', x: 20, y: 18},
+    {art: 'flowerYellow', x: 24, y: 36}, {art: 'mushroom', x: 28, y: 10},
+    {art: 'tuft', x: 33, y: 30}, {art: 'flowerPink', x: 36, y: 6}, {art: 'stone', x: 41, y: 22, scale: 4}, {art: 'stone', x: 47, y: 12, scale: 4},
+    {art: 'stone', x: 54, y: 3, scale: 4}, {art: 'tuft', x: 62, y: 34}, {art: 'rock', x: 66, y: 12},
+    {art: 'flowerYellow', x: 71, y: 5}, {art: 'flowerWhite', x: 74, y: 30}, {art: 'tuft', x: 79, y: 14},
+    {art: 'flowerPink', x: 84, y: 38}, {art: 'mushroom', x: 88, y: 8}, {art: 'tuft', x: 96, y: 6}
+]
 
 function GardenView(): React.JSX.Element {
-    const {pet, collection} = useGame()
+    const {pet, collection, stats} = useGame()
     const status = useStatus()
+    const [selected, setSelected] = useState<SpeciesId | null>(null)
     const stage = stageOf(pet.level)
+    const nextStage = STAGES.find((s) => s.minLevel > stage.minLevel)
     const need = xpToNextLevel(pet.level)
+    const now = new Date()
+    const eta = etaDays(pet, stats, now)
+
+    // 종별 완성 횟수와 마지막 완성 시각
+    const owned = new Map<SpeciesId, { count: number; lastAt: string }>()
+    for (const c of collection) {
+        const prev = owned.get(c.species)
+        owned.set(c.species, {
+            count: (prev?.count ?? 0) + 1,
+            lastAt: !prev || c.completedAt > prev.lastAt ? c.completedAt : prev.lastAt
+        })
+    }
+    const picked = selected ? owned.get(selected) : undefined
 
     return (
         <div className="garden">
-            <h1>Token Grove</h1>
-            <div className="garden-pet">
-                <PetSprite stage={stage.id} species={pet.species} scale={12}/>
-            </div>
-            <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
-            <div className="bar" title={`${formatXp(pet.xp)}/${need} XP`}>
-                <div className="bar-fill" style={{width: `${(pet.xp / need) * 100}%`}}/>
-            </div>
-            <div className="bar-label">{formatXp(pet.xp)} / {need} XP</div>
-            <div className="bar-label">
-                {status.lastCheckedAt === null
-                    ? '로그 확인 전'
-                    : `마지막 확인 ${new Date(status.lastCheckedAt).toLocaleTimeString()} · 이번 실행 +${formatXp(status.gainedXp)} XP`}
-            </div>
-
-            <h2>도감 {new Set(collection.map((c) => c.species)).size}/{SPECIES.length}</h2>
-            {collection.length === 0 ? (
-                <p className="empty">아직 완성한 식물이 없어요. 열매를 맺으면 이곳에 심어져요.</p>
-            ) : (
-                <div className="collection">
-                    {collection.map((c, i) => (
-                        <div key={i} title={new Date(c.completedAt).toLocaleDateString()}>
-                            <PetSprite stage="fruit" species={c.species} scale={3}/>
-                            <span>{SPECIES.find((s) => s.id === c.species)?.name}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            <h2>성장 기록</h2>
-            <ul className="stages">
-                {STAGES.map((s) => (
-                    <li key={s.id} className={pet.level >= s.minLevel ? 'done' : 'locked'}>
-                        {s.name} <span>{pet.level >= s.minLevel ? '달성' : `Lv.${s.minLevel}에 해금`}</span>
-                    </li>
+            <div className={`scene ${timeOfDay(now.getHours())}`}>
+                <div className="sun"/>
+                <div className="stars"/>
+                <div className="cloud c1"/>
+                <div className="cloud c2"/>
+                <div className="mtn"/>
+                <div className="mtn m2"/>
+                <div className="hill h1"/>
+                <div className="hill h2"/>
+                {PINES.map((p, i) => (
+                    <div key={`pine${i}`} className="decor" style={{left: `${p.x}%`, bottom: p.y}}>
+                        <PixelArt rows={DECOR.pine} colors={DECOR_COLORS} scale={p.scale}/>
+                    </div>
                 ))}
-            </ul>
+                <h1>Token Grove</h1>
+                <div className="fence"/>
+                <div className="grass"/>
+                <div className="scene-pet">
+                    <PetSprite stage={stage.id} species={pet.species} scale={10}/>
+                </div>
+                {DECOR_SPOTS.map((d, i) => (
+                    <div key={i} className="decor" style={{left: `${d.x}%`, bottom: d.y}}>
+                        <PixelArt rows={DECOR[d.art]} colors={DECOR_COLORS} scale={d.scale ?? 3}/>
+                    </div>
+                ))}
+                <div className="butterfly"><PixelArt rows={DECOR.butterfly} colors={DECOR_COLORS} scale={3}/></div>
+            </div>
+
+            <div className="panel">
+                <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                <div className="bar" title={`${formatXp(pet.xp)}/${need} XP`}>
+                    <div className="bar-fill" style={{width: `${(pet.xp / need) * 100}%`}}/>
+                </div>
+                <div className="bar-label">{formatXp(pet.xp)} / {need} XP</div>
+
+                <div className="stats">
+                    <div><b>{formatXp(stats.daily[dateKey(now)] ?? 0)}</b><span>오늘 XP</span></div>
+                    <div><b>{Math.floor(stats.totalXp).toLocaleString()}</b><span>누적 XP</span></div>
+                    <div>
+                        <b>{nextStage ? (eta === null ? '-' : `${eta}일`) : '최종'}</b>
+                        <span>{nextStage ? `${nextStage.name}까지` : '단계'}</span>
+                    </div>
+                </div>
+                <div className="bar-label">
+                    {status.lastCheckedAt === null
+                        ? '로그 확인 전'
+                        : `마지막 확인 ${new Date(status.lastCheckedAt).toLocaleTimeString()} · 이번 실행 +${formatXp(status.gainedXp)} XP`}
+                </div>
+
+                <h2>도감 {owned.size}/{SPECIES.length}</h2>
+                <div className="shelf">
+                    {SPECIES.map((sp) => {
+                        const own = owned.get(sp.id)
+                        return (
+                            <button
+                                key={sp.id}
+                                className={`slot${own ? '' : ' locked'}${selected === sp.id ? ' on' : ''}`}
+                                disabled={!own}
+                                onClick={() => setSelected(selected === sp.id ? null : sp.id)}
+                                title={own ? sp.name : '아직 만나지 못한 식물'}
+                            >
+                                <PetSprite stage="tree" species={sp.id} scale={4}/>
+                                <span>{own ? sp.name : '???'}</span>
+                                {own && own.count > 1 && <em>×{own.count}</em>}
+                            </button>
+                        )
+                    })}
+                </div>
+                {selected && picked && (
+                    <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt}/>
+                )}
+                {collection.length === 0 && <p className="empty">큰 나무까지 키워 완성하면 이곳에 심어져요.</p>}
+
+                <h2>성장 기록</h2>
+                <ul className="stages">
+                    {STAGES.map((s) => (
+                        <li key={s.id} className={pet.level >= s.minLevel ? 'done' : 'locked'}>
+                            {s.name} <span>{pet.level >= s.minLevel ? '✓' : `Lv.${s.minLevel}`}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     )
 }

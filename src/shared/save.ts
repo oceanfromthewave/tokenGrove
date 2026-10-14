@@ -1,4 +1,5 @@
 import {INITIAL_PET, addXp, isSpeciesId, type Completed, type PetState} from './growth.ts'
+import {EMPTY_STATS, type Stats} from './stats.ts'
 
 // 디스크에 저장하는 데이터 형식. 파일은 외부에서 바뀌거나 깨질 수 있으니 읽을 때 반드시 검증한다.
 export interface SaveData {
@@ -6,10 +7,11 @@ export interface SaveData {
     petWindow: { x: number; y: number } | null // 펫 창 위치. 없으면 기본 위치
     processed: string[] // 이미 경험치로 반영한 사용 기록 키 (중복 보상 방지)
     collection: Completed[] // 완성되어 정원에 보관된 식물
+    stats: Stats // 경험치 통계
     logOffsets: Record<string, number> | null // Claude Code 로그별 읽은 위치. null = 아직 기준선 없음(첫 실행)
 }
 
-export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], logOffsets: null}
+export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, logOffsets: null}
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
@@ -43,8 +45,16 @@ export function parseSave(text: string): SaveData {
                 .map((c: Completed) => ({species: c.species, completedAt: c.completedAt}))
                 .slice(0, 10_000)
             : []
+        const dailyRaw = raw.stats?.daily
+        const daily: Record<string, number> = {}
+        if (dailyRaw && typeof dailyRaw === 'object' && !Array.isArray(dailyRaw)) {
+            for (const [k, v] of Object.entries(dailyRaw).slice(0, 400)) {
+                if (/^\d{4}-\d{2}-\d{2}$/.test(k) && isNum(v) && v >= 0 && v <= 1e9) daily[k] = v
+            }
+        }
+        const totalXp = isNum(raw.stats?.totalXp) && raw.stats.totalXp >= 0 ? raw.stats.totalXp : 0
         // 레벨 기준보다 xp가 크면 레벨업으로 정리
-        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, logOffsets}
+        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily}, logOffsets}
     } catch {
         return EMPTY_SAVE
     }

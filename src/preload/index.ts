@@ -1,10 +1,12 @@
 import {contextBridge, ipcRenderer} from 'electron'
 import type {Completed, PetState} from '../shared/growth'
+import type {Stats} from '../shared/stats'
 import type {CollectStatus} from '../shared/usage'
 
 export interface AppState {
     pet: PetState
     collection: Completed[]
+    stats: Stats
 }
 
 // 렌더러에 노출할 기능은 여기 적힌 것뿐이다. (ipcRenderer 자체는 노출하지 않는다)
@@ -17,6 +19,9 @@ const api = {
         ipcRenderer.on('status:changed', handler)
         return () => ipcRenderer.removeListener('status:changed', handler)
     },
+    dragStart: (): void => ipcRenderer.send('pet:dragStart'),
+    dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),
+    dragEnd: (): void => ipcRenderer.send('pet:dragEnd'),
     openGarden: (): void => ipcRenderer.send('garden:open'),
     onStateChanged: (cb: (state: AppState) => void): (() => void) => {
         const handler = (_: unknown, state: AppState): void => cb(state)

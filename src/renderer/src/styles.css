@@ -15,7 +15,6 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-app-region: drag; /* 펫을 끌어서 창 이동 */
 }
 
 .pet {
@@ -30,7 +29,6 @@ body,
 }
 
 .test-btn {
-  -webkit-app-region: no-drag; /* 드래그 영역 안에서도 클릭되게 */
   font: 12px sans-serif;
   padding: 2px 8px;
   cursor: pointer;
@@ -43,36 +41,263 @@ body,
 
 /* 정원 화면 */
 .garden {
-  box-sizing: border-box;
   min-height: 100%;
-  padding: 16px 20px;
+  overflow-y: auto;
   background: #1f3a2a;
   color: #e8f3e0;
   font-family: sans-serif;
   text-align: center;
-  overflow: auto;
 }
 
-.garden h1 {
-  margin: 0 0 12px;
+/* 풍경: 하늘, 해, 구름, 언덕, 울타리, 잔디. 이미지 없이 CSS만으로 도트 느낌을 낸다. */
+.scene {
+  position: relative;
+  height: 340px;
+  overflow: hidden;
+  background: linear-gradient(#7ec8ff, #d6efff);
+}
+
+.scene.dusk {
+  background: linear-gradient(#5b6fc7, #f0a37a 60%, #ffd9a0);
+}
+
+.scene.night {
+  background: linear-gradient(#0d1b3d, #27407a);
+}
+
+.scene h1 {
+  position: relative;
+  margin: 0;
+  padding-top: 14px;
   font-size: 18px;
+  color: #1f3a2a;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.scene.night h1 {
+  color: #e8f3e0;
+  text-shadow: none;
+}
+
+.sun {
+  position: absolute;
+  top: 28px;
+  right: 36px;
+  width: 36px;
+  height: 36px;
+  background: #ffd84d;
+  box-shadow: 0 0 0 6px #ffe98a, 0 0 0 12px rgba(255, 233, 138, 0.35);
+}
+
+.dusk .sun {
+  top: 120px;
+  background: #ff9a5a;
+  box-shadow: 0 0 0 6px #ffb77f, 0 0 0 12px rgba(255, 183, 127, 0.35);
+}
+
+.night .sun {
+  background: #f4f1d0; /* 달 */
+  box-shadow: 0 0 0 6px rgba(244, 241, 208, 0.35);
+}
+
+.stars {
+  display: none;
+  position: absolute;
+  inset: 0 0 120px;
+  background-image: radial-gradient(#fff 1px, transparent 1.5px), radial-gradient(#fff 1px, transparent 1.5px);
+  background-size: 56px 56px, 83px 83px;
+  background-position: 0 0, 21px 33px;
+}
+
+.night .stars {
+  display: block;
+}
+
+.cloud {
+  position: absolute;
+  width: 36px;
+  height: 12px;
+  background: #fff;
+  box-shadow: 12px -12px 0 #fff, 24px -12px 0 #fff, 36px 0 0 #fff, 12px 0 0 #fff, 24px 0 0 #fff;
+  animation: drift 60s linear infinite;
+}
+
+.night .cloud {
+  opacity: 0.25;
+}
+
+.c1 {
+  top: 60px;
+  left: -60px;
+}
+
+.c2 {
+  top: 110px;
+  left: -60px;
+  animation-duration: 90s;
+  animation-delay: -40s;
+  opacity: 0.85;
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(560px);
+  }
+}
+
+/* 먼 산: 계단 모양으로 깎아서 도트 느낌을 낸다. 꼭대기는 눈이 덮인 것처럼 밝게 */
+.mtn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 110px;
+  height: 150px;
+  background: linear-gradient(#f2f7ff 0 16%, #aac2de 16% 38%, #8fabcc 38%);
+  clip-path: polygon(0 100%, 0 78%, 6% 78%, 6% 62%, 12% 62%, 12% 44%, 18% 44%, 18% 28%, 24% 28%, 24% 12%, 30% 12%, 30% 28%, 36% 28%,
+    36% 46%, 42% 46%, 42% 62%, 48% 62%, 48% 52%, 54% 52%, 54% 36%, 60% 36%, 60% 20%, 66% 20%, 66% 36%, 72% 36%, 72% 54%, 78% 54%,
+    78% 70%, 84% 70%, 84% 58%, 90% 58%, 90% 74%, 100% 74%, 100% 100%);
+}
+
+.m2 {
+  bottom: 100px;
+  height: 110px;
+  background: linear-gradient(#9ab5d3 0 30%, #7f9dc0 30%);
+  clip-path: polygon(0 100%, 0 60%, 8% 60%, 8% 40%, 16% 40%, 16% 22%, 24% 22%, 24% 42%, 32% 42%, 32% 62%, 44% 62%, 44% 46%, 52% 46%,
+    52% 28%, 60% 28%, 60% 46%, 68% 46%, 68% 64%, 80% 64%, 80% 44%, 88% 44%, 88% 60%, 100% 60%, 100% 100%);
+  opacity: 0.9;
+}
+
+.hill {
+  position: absolute;
+  bottom: 70px;
+  border-radius: 50% 50% 0 0;
+  /* 점 무늬로 풀밭 질감을 준다 */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1.5px, transparent 2px), radial-gradient(rgba(0, 60, 0, 0.18) 1.5px, transparent 2px);
+  background-size: 20px 14px, 20px 14px;
+  background-position: 0 0, 10px 7px;
+}
+
+.h1 {
+  left: -12%;
+  width: 70%;
+  height: 110px;
+  background-color: #86d672;
+}
+
+.h2 {
+  right: -16%;
+  width: 80%;
+  height: 80px;
+  background-color: #6bbf59;
+}
+
+.dusk .mtn,
+.night .mtn,
+.dusk .hill,
+.night .hill,
+.dusk .grass,
+.night .grass,
+.dusk .fence,
+.night .fence,
+.dusk .decor,
+.night .decor {
+  filter: brightness(0.75);
+}
+
+.night .mtn,
+.night .hill,
+.night .grass,
+.night .fence,
+.night .decor {
+  filter: brightness(0.45) saturate(0.8);
+}
+
+.fence {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  height: 36px;
+  background: repeating-linear-gradient(90deg, #b9824c 0 8px, transparent 8px 30px) 6px 0 / 100% 100%,
+    linear-gradient(#c99560 0 4px, transparent 4px 20px, #c99560 20px 24px, transparent 24px);
+}
+
+.grass {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  /* 잔디 가장자리 톱니 + 줄무늬 밭 + 흩뿌린 점 무늬로 바닥에 질감을 준다 */
+  background:
+    repeating-linear-gradient(90deg, #4f9a40 0 4px, #5aa84a 4px 8px) top / 100% 8px no-repeat,
+    radial-gradient(#8bdc74 1.5px, transparent 2px) 0 0 / 22px 18px,
+    radial-gradient(#4a8f3c 1.5px, transparent 2px) 11px 9px / 22px 18px,
+    repeating-linear-gradient(180deg, #6bbf59 0 14px, #62b551 14px 28px);
+  border-top: 4px solid #3f8040;
+  box-shadow: inset 0 -8px 0 #4a8f3c;
+}
+
+.scene-pet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.decor {
+  position: absolute;
+  line-height: 0;
+}
+
+.butterfly {
+  position: absolute;
+  top: 150px;
+  left: -30px;
+  line-height: 0;
+  animation: fly 24s linear infinite, bob 1.6s ease-in-out infinite;
+}
+
+.butterfly svg {
+  animation: flap 0.35s steps(2) infinite;
+}
+
+.night .butterfly {
+  display: none;
+}
+
+@keyframes fly {
+  to {
+    left: 490px;
+  }
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes flap {
+  50% {
+    transform: scaleX(0.55);
+  }
+}
+
+.panel {
+  padding: 14px 20px 20px;
 }
 
 .garden h2 {
-  margin: 20px 0 8px;
+  margin: 18px 0 8px;
   font-size: 14px;
   text-align: left;
 }
 
-.garden-pet {
-  display: inline-block;
-  padding: 16px;
-  background: #2d5a3d;
-  border-radius: 12px;
-}
-
 .garden-name {
-  margin: 10px 0 6px;
+  margin-bottom: 6px;
   font-weight: 600;
 }
 
@@ -95,7 +320,107 @@ body,
   opacity: 0.8;
 }
 
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stats div {
+  padding: 8px 4px;
+  background: #2d5a3d;
+  border-radius: 8px;
+}
+
+.stats b {
+  display: block;
+  font-size: 16px;
+}
+
+.stats span {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.empty {
+  margin: 8px 0 0;
+  font-size: 12px;
+  opacity: 0.7;
+  text-align: left;
+}
+
+/* 도감: 선반 위에 화분이 놓인 모양 */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px 6px;
+}
+
+.slot {
+  position: relative;
+  padding: 6px 0 4px;
+  font: 11px sans-serif;
+  color: inherit;
+  background: #2d5a3d;
+  border: 0;
+  border-bottom: 6px solid #8a5a2b; /* 선반 */
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+}
+
+.slot:hover:not(:disabled),
+.slot.on {
+  background: #3b7350;
+}
+
+.slot span {
+  display: block;
+}
+
+.slot em {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-style: normal;
+  color: #ffd84d;
+}
+
+.slot.locked {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.slot.locked svg {
+  filter: brightness(0) opacity(0.5); /* 아직 못 만난 종은 실루엣만 */
+}
+
+.detail {
+  margin-top: 12px;
+  padding: 12px;
+  background: #2d5a3d;
+  border-radius: 8px;
+}
+
+.detail-name {
+  font-weight: 600;
+}
+
+.detail-stage,
+.detail-meta {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.detail input {
+  width: 80%;
+  margin: 8px 0;
+}
+
 .stages {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -105,39 +430,12 @@ body,
 .stages li {
   display: flex;
   justify-content: space-between;
-  padding: 6px 10px;
-  margin-bottom: 4px;
+  padding: 5px 10px;
   background: #2d5a3d;
   border-radius: 6px;
+  font-size: 12px;
 }
 
 .stages li.locked {
   opacity: 0.45;
-}
-
-.stages li span {
-  font-size: 12px;
-}
-
-.empty {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.7;
-  text-align: left;
-}
-
-.collection {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.collection div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 6px;
-  background: #2d5a3d;
-  border-radius: 6px;
-  font-size: 11px;
 }
