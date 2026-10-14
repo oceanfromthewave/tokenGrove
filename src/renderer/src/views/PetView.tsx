@@ -20,7 +20,7 @@ const HEART_COLORS = {r: '#ff6b8a'}
 // 버튼 안의 작은 도트 아이콘
 const SPARKLE = ['...y...', '...y...', '..yyy..', 'yyyyyyy', '..yyy..', '...y...', '...y...']
 const SPROUT = ['..g.g..', '.ggggg.', '..ggg..', '...t...', '...t...', '.mmmmm.']
-const ICON_COLORS = {y: '#fff1a8', g: '#d8ffb0', t: '#8a5a2b', m: '#6e4b2a'}
+const ICON_COLORS = {y: '#fff1a8', g: '#b8f08f', t: '#e0bb85', m: '#c9a06a'}
 
 // 레벨업/성장 때 사방으로 튀는 반짝이 8개의 이동 방향
 const SPARKS = Array.from({length: 8}, (_, i) => {
@@ -120,10 +120,10 @@ function PetView(): React.JSX.Element {
                 <div className="xptext">{formatXp(pet.xp)} / {xpToNextLevel(pet.level)} XP</div>
             </div>
             <div className="row">
-                <button className="pbtn gold" title="경험치 테스트 (+30 XP)" onClick={() => window.api.addTestXp()}>
+                <button className="pbtn" title="경험치 테스트 (+30 XP)" onClick={() => window.api.addTestXp()}>
                     <PixelArt rows={SPARKLE} colors={ICON_COLORS} scale={2}/>XP
                 </button>
-                <button className="pbtn green" title="정원 열기" onClick={() => window.api.openGarden()}>
+                <button className="pbtn" title="정원 열기" onClick={() => window.api.openGarden()}>
                     <PixelArt rows={SPROUT} colors={ICON_COLORS} scale={2}/>정원
                 </button>
             </div>

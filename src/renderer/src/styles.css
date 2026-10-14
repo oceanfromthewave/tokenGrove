@@ -206,32 +206,32 @@ body,
   width: 116px;
   padding: 3px 6px 4px;
   text-align: center;
-  background: rgba(20, 40, 28, 0.82);
+  background: #8fd0ff; /* 하늘색 */
   border: 2px solid #2a1c12;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: inset 2px 2px 0 #b9e3ff, inset -2px -2px 0 #6fb4ea, 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 .status {
   font: bold 11px sans-serif;
-  color: #fffbe8;
+  color: #1d3550;
 }
 
 .xpbar {
   height: 6px;
   margin: 3px 0 2px;
-  background: #0f1d15;
+  background: #e8f5ff;
   border: 1px solid #2a1c12;
 }
 
 .xpbar i {
   display: block;
   height: 100%;
-  background: repeating-linear-gradient(90deg, #8fd36b 0 4px, #6bbf59 4px 6px); /* 도트처럼 칸이 나뉜 막대 */
+  background: repeating-linear-gradient(90deg, #4f9a40 0 4px, #66b552 4px 6px); /* 도트처럼 칸이 나뉜 막대 */
 }
 
 .xptext {
   font: 10px sans-serif;
-  color: #cfe8c4;
+  color: #2f4b69;
 }
 
 .row {
@@ -253,14 +253,10 @@ body,
   cursor: pointer;
 }
 
-.pbtn.green {
-  background: #4f9a40;
-  box-shadow: inset 2px 2px 0 #7fd06a, inset -2px -2px 0 #3a7a30, 0 2px 0 #2a1c12;
-}
-
-.pbtn.gold {
-  background: #c9902c;
-  box-shadow: inset 2px 2px 0 #f0c25a, inset -2px -2px 0 #9a6c1c, 0 2px 0 #2a1c12;
+/* 진한 갈색 (+XP, 정원 모두 같은 색) */
+.pbtn {
+  background: #6b4a2b;
+  box-shadow: inset 2px 2px 0 #92693f, inset -2px -2px 0 #4a321d, 0 2px 0 #2a1c12;
 }
 
 .pbtn:hover {
