@@ -22,6 +22,113 @@ body,
   gap: 4px;
 }
 
+/* 펫 애니메이션: 숨쉬듯 까딱, 레벨업/성장 때 커졌다 돌아오며 반짝이, 경험치가 오르면 숫자가 떠오른다 */
+.pet {
+  position: relative;
+}
+
+.stage-box {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.sprite,
+.idle {
+  line-height: 0;
+}
+
+.idle {
+  animation: idle 2.4s steps(1, end) infinite; /* 도트답게 부드럽지 않고 딱딱 끊어서 움직인다 */
+}
+
+@keyframes idle {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.sprite.pop {
+  animation: pop 0.7s ease-out;
+}
+
+@keyframes pop {
+  30% {
+    transform: scale(1.18);
+  }
+  60% {
+    transform: scale(0.96);
+  }
+}
+
+.spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: #ffe27a;
+  box-shadow: 0 0 4px #fff;
+  pointer-events: none;
+  animation: burst 1.1s ease-out forwards;
+}
+
+@keyframes burst {
+  from {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.banner,
+.gain {
+  position: absolute;
+  font: bold 12px sans-serif;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+  pointer-events: none;
+  animation: rise 1.8s ease-out forwards;
+}
+
+.banner {
+  top: -2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.gain {
+  top: 22px;
+  right: 14px;
+  color: #d8ffb0;
+}
+
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle,
+  .sprite.pop,
+  .spark {
+    animation: none;
+  }
+}
+
 .status {
   font: 12px sans-serif;
   color: #fff;
