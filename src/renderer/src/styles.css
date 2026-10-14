@@ -1,0 +1,143 @@
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+.pet {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: drag; /* 펫을 끌어서 창 이동 */
+}
+
+.pet {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.status {
+  font: 12px sans-serif;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 3px #000; /* 투명 배경 위에서도 읽히게 */
+}
+
+.test-btn {
+  -webkit-app-region: no-drag; /* 드래그 영역 안에서도 클릭되게 */
+  font: 12px sans-serif;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 4px;
+}
+
+/* 정원 화면 */
+.garden {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 16px 20px;
+  background: #1f3a2a;
+  color: #e8f3e0;
+  font-family: sans-serif;
+  text-align: center;
+  overflow: auto;
+}
+
+.garden h1 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.garden h2 {
+  margin: 20px 0 8px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.garden-pet {
+  display: inline-block;
+  padding: 16px;
+  background: #2d5a3d;
+  border-radius: 12px;
+}
+
+.garden-name {
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.bar {
+  height: 12px;
+  background: #14281c;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #8fd36b;
+  transition: width 0.3s;
+}
+
+.bar-label {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.stages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.stages li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: #2d5a3d;
+  border-radius: 6px;
+}
+
+.stages li.locked {
+  opacity: 0.45;
+}
+
+.stages li span {
+  font-size: 12px;
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+  text-align: left;
+}
+
+.collection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.collection div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  background: #2d5a3d;
+  border-radius: 6px;
+  font-size: 11px;
+}
