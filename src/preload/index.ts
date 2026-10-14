@@ -1,6 +1,7 @@
 import {contextBridge, ipcRenderer} from 'electron'
 import type {Completed, PetState} from '../shared/growth'
 import type {Stats} from '../shared/stats'
+import type {Settings} from '../shared/settings'
 import type {CollectStatus} from '../shared/usage'
 
 export interface AppState {
@@ -18,6 +19,13 @@ const api = {
         const handler = (_: unknown, s: CollectStatus): void => cb(s)
         ipcRenderer.on('status:changed', handler)
         return () => ipcRenderer.removeListener('status:changed', handler)
+    },
+    getSettings: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
+    setSettings: (patch: Partial<Settings>): Promise<Settings> => ipcRenderer.invoke('settings:set', patch),
+    onSettingsChanged: (cb: (s: Settings) => void): (() => void) => {
+        const handler = (_: unknown, s: Settings): void => cb(s)
+        ipcRenderer.on('settings:changed', handler)
+        return () => ipcRenderer.removeListener('settings:changed', handler)
     },
     dragStart: (): void => ipcRenderer.send('pet:dragStart'),
     dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),

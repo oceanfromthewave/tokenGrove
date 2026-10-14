@@ -764,3 +764,69 @@ body,
   opacity: 0.45;
   border-left-color: #567a63;
 }
+
+/* 설정 */
+.settings {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #2d5a3d;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.set-row b {
+  display: block;
+}
+
+.set-row small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.set-row small.ok {
+  color: #a6e58a;
+  opacity: 1;
+}
+
+.set-row small.warn {
+  color: #ffd27a;
+  opacity: 1;
+}
+
+.set-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #8fd36b;
+  cursor: pointer;
+}
+
+.seg {
+  display: flex;
+  gap: 2px;
+}
+
+.seg button {
+  padding: 4px 8px;
+  font: 12px sans-serif;
+  color: inherit;
+  background: #1f3a2a;
+  border: 0;
+  cursor: pointer;
+}
+
+.seg button.on {
+  background: #8fd36b;
+  color: #14281c;
+  font-weight: 600;
+}

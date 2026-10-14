@@ -6,6 +6,7 @@ import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from 
 import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
 import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
 import {useGame, useStatus} from '../usePet'
+import SettingsPanel from './SettingsPanel'
 import SpeciesDetail from './SpeciesDetail'
 
 // 칸 단위로 만든 무지개 (한 번만 계산)
@@ -174,6 +175,9 @@ function GardenView(): React.JSX.Element {
                         </li>
                     ))}
                 </ul>
+
+                <h2>설정</h2>
+                <SettingsPanel tools={status.tools}/>
             </div>
         </div>
     )

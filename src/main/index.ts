@@ -1,6 +1,8 @@
-import {app, BrowserWindow, ipcMain, Menu, screen} from 'electron'
+import {app, BrowserWindow, ipcMain, Menu, Notification, screen} from 'electron'
 import {join} from 'path'
-import {INITIAL_PET, harvestIfReady, newSeed, type Completed, type PetState} from '../shared/growth'
+import {INITIAL_PET, SPECIES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
+import {petEvent} from '../shared/events'
+import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '../shared/settings'
 import {EMPTY_SAVE} from '../shared/save'
 import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
 import {TOKENS_PER_XP, applyUsage, type CollectStatus, type UsageRecord} from '../shared/usage'
@@ -16,7 +18,8 @@ let collection: Completed[] = [] // 완성되어 정원에 보관된 식물
 let stats: Stats = EMPTY_STATS // 로그에서 얻은 경험치 통계 (테스트 버튼은 제외)
 let processed: string[] = [] // 이미 반영한 사용 기록 키
 let logOffsets: Offsets | null = null // Claude Code 로그 읽은 위치
-let status: CollectStatus = {lastCheckedAt: null, gainedXp: 0}
+let settings: Settings = DEFAULT_SETTINGS
+let status: CollectStatus = {lastCheckedAt: null, gainedXp: 0, tools: {claude: 0, codex: 0}}
 let petPos: { x: number; y: number } | null = null
 let gardenWin: BrowserWindow | null = null
 let petWin: BrowserWindow | null = null
@@ -41,7 +44,7 @@ function visiblePos(pos: { x: number; y: number } | null, w: number, h: number):
 }
 
 function persist(): void {
-    writeSave({pet, petWindow: petPos, processed, collection, stats, logOffsets})
+    writeSave({pet, petWindow: petPos, processed, collection, stats, settings, logOffsets})
 }
 
 // 펫 우클릭 메뉴. 종료와 자동 실행 설정을 여기서 제공한다. (자동 실행은 기본 꺼짐, 사용자가 직접 켠다)
@@ -124,15 +127,37 @@ function settle(): boolean {
 
 ipcMain.handle('state:get', getState)
 ipcMain.handle('status:get', () => status)
+ipcMain.handle('settings:get', () => settings)
+ipcMain.handle('settings:set', (_e, patch: unknown) => {
+    settings = mergeSettings(settings, patch) // 알려진 항목과 형식만 받아들인다
+    persist()
+    for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
+    return settings
+})
 // 사용 기록 반영의 유일한 입구. 실제 AI 연동부(adapter)도 이 함수로 기록을 넘긴다.
+// 단계가 바뀌거나 식물을 완성했을 때만 알림을 띄운다. (레벨마다 띄우면 너무 잦다)
+function notifyGrowth(before: PetState): void {
+    const kind = petEvent(before, pet)
+    if (!settings.notifications || (kind !== 'stage' && kind !== 'newSeed') || !Notification.isSupported()) return
+    const name = (id: string): string => SPECIES.find((s) => s.id === id)?.name ?? ''
+    if (kind === 'stage') {
+        new Notification({title: `${stageOf(pet.level).name} 단계가 됐어요`, body: `${name(pet.species)}이(가) 쑥쑥 자라고 있어요`}).show()
+    } else {
+        new Notification({title: '식물을 완성했어요!', body: `${name(before.species)}이(가) 정원 도감에 심어졌고, 새 씨앗이 시작됐어요`}).show()
+    }
+}
+
 function ingestUsage(records: UsageRecord[]): number {
-    const result = applyUsage(pet, processed, records)
+    const before = pet
+    const result = applyUsage(pet, processed, records, SPEED_MULTIPLIER[settings.speed])
     const changed = result.processed !== processed
     pet = result.pet
     processed = result.processed
-    // 테스트 버튼으로 얻은 경험치는 통계에 넣지 않는다. (실제 사용량만 기록)
-    if (records.some((r) => r.provider !== TEST_PROVIDER)) stats = recordGain(stats, result.gainedXp, dateKey(new Date()))
+    // 테스트 버튼으로 얻은 경험치는 통계와 알림에 넣지 않는다. (실제 사용량만)
+    const real = records.some((r) => r.provider !== TEST_PROVIDER)
+    if (real) stats = recordGain(stats, result.gainedXp, dateKey(new Date()))
     const harvested = settle()
+    if (real) notifyGrowth(before)
     persist() // 읽은 위치(logOffsets)도 함께 저장된다
     if (changed || harvested) broadcastState()
     return result.gainedXp
@@ -153,7 +178,8 @@ function pollLogs(): void {
     const codexRoot = defaultCodexRoot()
     const claude = scanClaudeLogs(claudeRoot, hasBaseline(known, claudeRoot) ? known : null)
     const codex = scanCodexLogs(codexRoot, hasBaseline(known, codexRoot) ? known : null)
-    const records = [...claude.records, ...codex.records]
+    // 꺼 둔 도구의 기록은 읽은 위치만 앞으로 보내고 버린다. (다시 켰을 때 그동안의 기록이 한꺼번에 들어오지 않게)
+    const records = [...(settings.claude ? claude.records : []), ...(settings.codex ? codex.records : [])]
     // 새로 기준선을 잡은 도구가 있으면(로그 파일이 처음 보였을 때) 그 위치를 저장해야 한다
     const newBaseline =
         (!hasBaseline(known, claudeRoot) && Object.keys(claude.offsets).length > 0) ||
@@ -161,7 +187,11 @@ function pollLogs(): void {
     // 이미 저장된 기준선에 이번에 새로 잡힌 기준선을 합친다. (파일이 지워진 항목은 자연스럽게 사라진다)
     logOffsets = {...claude.offsets, ...codex.offsets}
     const gained = first || records.length > 0 || newBaseline ? ingestUsage(records) : 0
-    status = {lastCheckedAt: Date.now(), gainedXp: status.gainedXp + gained}
+    status = {
+        lastCheckedAt: Date.now(),
+        gainedXp: status.gainedXp + gained,
+        tools: {claude: Object.keys(claude.offsets).length, codex: Object.keys(codex.offsets).length}
+    }
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('status:changed', status)
 }
 
@@ -202,6 +232,7 @@ app.whenReady().then(() => {
     pet = save === EMPTY_SAVE ? newSeed() : save.pet // 첫 실행(또는 저장 파일 없음/손상)은 무작위 씨앗
     collection = save.collection
     stats = save.stats
+    settings = save.settings
     processed = save.processed
     logOffsets = save.logOffsets
     petPos = save.petWindow

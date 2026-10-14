@@ -54,4 +54,10 @@ assert.equal(applyUsage(INITIAL_PET, [], [rec({id: 'tiny', totalTokens: 5})]).pr
 const many = Array.from({length: 400}, (_, i) => rec({id: `s${i}`, totalTokens: U / 4}))
 assert.deepEqual(applyUsage(INITIAL_PET, [], many).pet, {...INITIAL_PET, level: 2, xp: 0})
 
+// 성장 속도 배율: 같은 기록이라도 배율만큼 경험치가 달라지고, 재처리는 여전히 0
+const fast = applyUsage(INITIAL_PET, [], [rec({id: 'm1'})], 2)
+assert.equal(fast.gainedXp, 60)
+assert.equal(applyUsage(fast.pet, fast.processed, [rec({id: 'm1'})], 2).gainedXp, 0)
+assert.equal(applyUsage(INITIAL_PET, [], [rec({id: 'm2'})], 0.5).gainedXp, 15)
+
 console.log('usage: all checks passed')

@@ -52,6 +52,7 @@ const isUsable = (r: UsageRecord): boolean =>
 export interface CollectStatus {
     lastCheckedAt: number | null // 마지막으로 로그를 확인한 시각(ms)
     gainedXp: number // 이번 실행 동안 로그에서 얻은 경험치
+    tools: { claude: number; codex: number } // 도구별로 찾은 로그 파일 수 (0이면 로그 없음)
 }
 
 export interface UsageResult {
@@ -62,7 +63,8 @@ export interface UsageResult {
 
 // 사용 기록을 경험치로 반영한다. 같은 기록을 다시 넘겨도(재시작, 파일 재읽기, 재시도) 보상은 한 번뿐이다.
 // ponytail: 처리한 키를 전부 보관한다. 수십만 건이 넘으면 소스별 읽기 위치 저장이나 SQLite로 교체.
-export function applyUsage(pet: PetState, processed: string[], records: UsageRecord[]): UsageResult {
+// multiplier는 설정의 성장 속도 배율이다. 같은 기록은 배율과 상관없이 한 번만 반영된다.
+export function applyUsage(pet: PetState, processed: string[], records: UsageRecord[], multiplier = 1): UsageResult {
     const seen = new Set(processed)
     const added: string[] = []
     let gainedXp = 0
@@ -74,5 +76,6 @@ export function applyUsage(pet: PetState, processed: string[], records: UsageRec
         added.push(key)
         gainedXp += xpOf(r)
     }
+    gainedXp *= multiplier
     return {pet: addXp(pet, gainedXp), processed: added.length ? [...processed, ...added] : processed, gainedXp}
 }
