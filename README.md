@@ -5,7 +5,7 @@
 </p>
 
 A Windows desktop app that grows a pixel-art plant from your AI coding usage.
-Use Claude Code as you normally do and a small flower pot on your desktop grows by itself. There is nothing to click.
+Use Claude Code or Codex as you normally do and a small flower pot on your desktop grows by itself. There is nothing to click.
 
 <p align="center">
   <img src="docs/sprite-preview.png" width="720" alt="10 species x 10 growth stages of pixel plants">
@@ -15,7 +15,7 @@ Use Claude Code as you normally do and a small flower pot on your desktop grows 
 
 - **Pet window**: a small transparent window with a flower pot. Drag it anywhere; it stays on top of other windows. Right-click it for the menu (open the garden, launch at login, quit).
 - **Garden window**: open it with the `정원` (garden) button on the pet window. It shows the current plant's level and XP, its growth history, and a collection of the plants you have finished.
-- **Growth**: the app reads only token counts from the logs Claude Code writes and turns them into XP. It checks for new log lines every 30 seconds.
+- **Growth**: the app reads only token counts from the logs Claude Code and Codex write and turns them into XP. It checks for new log lines every 30 seconds.
 - **Completion**: at level 11 the plant is stored in the garden collection and a new seed of a random species starts.
 
 ### Growth stages (10)
@@ -35,7 +35,7 @@ The seed stage looks the same for every species, so you cannot tell which one yo
 XP = (input tokens + output tokens x 5) / 30,000
 ```
 
-- Input tokens are `input_tokens + cache_creation_input_tokens`.
+- For Claude Code, input tokens are `input_tokens + cache_creation_input_tokens`. For Codex, they are `input_tokens - cached_input_tokens`.
 - Cache reads (`cache_read_input_tokens`) are not counted. They re-read the same context on every turn, so counting them would inflate usage far beyond the work actually done.
 - The same response is logged on several lines, so records are de-duplicated by `message.id` and `requestId`.
 - Usage recorded before the first launch is not rewarded. On the first run the app only remembers where each log file currently ends.
@@ -46,7 +46,7 @@ The conversion rules live in [`src/shared/usage.ts`](src/shared/usage.ts).
 
 - Everything stays on your PC. Nothing is sent anywhere.
 - From the logs the app extracts only the record ID, timestamp and token numbers. Prompts, conversation text and code are never stored or printed.
-- The original logs (`~/.claude/projects/**/*.jsonl`) are only read, never modified.
+- The original logs (`~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/*.jsonl`) are only read, never modified.
 - The only file the app writes is `%APPDATA%\tokengrove\save.json`.
 
 ## Getting started
@@ -82,7 +82,7 @@ The installer is not code-signed, so Windows SmartScreen may show a warning. Cho
 src/
 ├─ shared/     Pure logic with no Electron dependency; tests sit next to it.
 │              growth (levels, stages, species, completion), usage (record model, XP, de-duplication),
-│              claudeCode (log line to record), save (save-file validation), sprites (pixel art)
+│              claudeCode and codex (log line to record), save (save-file validation), sprites (pixel art)
 ├─ main/       Window management, the single source of truth for pet state, saving, incremental log reading
 ├─ preload/    The small, explicit API exposed to the renderer
 └─ renderer/   React UI (pet window and garden window)
@@ -94,7 +94,7 @@ src/
 
 ## Current limitations
 
-- **Claude Code** is the only supported log source. Codex and others are not connected yet.
+- Supported log sources are **Claude Code** and **Codex**. Other tools are not connected yet.
 - Tested on Windows only.
 - The XP conversion rate was tuned to the author's own usage, so growth speed will vary from person to person.
 

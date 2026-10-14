@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
-import {scanClaudeLogs} from './claudeLogs.ts'
+import {scanClaudeLogs, scanCodexLogs} from './claudeLogs.ts'
 
 const root = mkdtempSync(join(tmpdir(), 'tg-claude-'))
 try {
@@ -45,6 +45,29 @@ try {
     assert.deepEqual(scanClaudeLogs(join(root, 'none'), null), {records: [], offsets: {}})
 } finally {
     rmSync(root, {recursive: true, force: true})
+}
+
+// Codex 로그도 같은 방식(기준선, 증분 읽기)으로 읽는다
+const croot = mkdtempSync(join(tmpdir(), 'tg-codex-'))
+try {
+    const cfile = join(croot, 's.jsonl')
+    const tc = (total: number): string => JSON.stringify({
+        type: 'event_msg', timestamp: `2026-01-01T00:00:${String(total).padStart(2, '0')}Z`,
+        payload: {type: 'token_count', info: {
+            total_token_usage: {total_tokens: total},
+            last_token_usage: {input_tokens: 100, cached_input_tokens: 40, output_tokens: 10}
+        }}
+    }) + '\n'
+    writeFileSync(cfile, tc(1))
+    const cb = scanCodexLogs(croot, null)
+    assert.equal(cb.records.length, 0) // 첫 확인은 기준선만
+    appendFileSync(cfile, tc(2) + JSON.stringify({type: 'response_item', payload: {type: 'message'}}) + '\n' + tc(3))
+    const cs = scanCodexLogs(croot, cb.offsets)
+    assert.deepEqual(cs.records.map((r) => r.provider), ['codex', 'codex'])
+    assert.equal(cs.records[0].inputTokens, 60) // 100 - 캐시 40
+    assert.equal(scanCodexLogs(croot, cs.offsets).records.length, 0)
+} finally {
+    rmSync(croot, {recursive: true, force: true})
 }
 
 console.log('claudeLogs: all checks passed')

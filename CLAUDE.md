@@ -192,7 +192,7 @@ AI별 연동부는 가능한 경우 아래와 같은 공통 형식으로 변환�
 - 린트/포맷 도구는 없다. 테스트 도구도 추가하지 않았다(Node 22+가 `.ts`를 직접 실행).
 
 ### 구조
-- `src/shared/` 순수 로직(Electron 의존 없음): `growth.ts`(레벨·단계·식물 종·완성 후 정원 보관), `sprites.ts`(10종×10단계 도트 그림을 절반 대칭 + Canvas 도구로 생성), `usage.ts`(공통 기록 모델, 토큰→XP 변환, 멱등 `applyUsage`), `claudeCode.ts`(로그 한 줄→`UsageRecord`), `save.ts`(저장 파일 검증 `parseSave`). 새 규칙은 여기에 두고 테스트를 옆에 둔다.
+- `src/shared/` 순수 로직(Electron 의존 없음): `growth.ts`(레벨·단계·식물 종·완성 후 정원 보관), `sprites.ts`(10종×10단계 도트 그림을 절반 대칭 + Canvas 도구로 생성), `usage.ts`(공통 기록 모델, 토큰→XP 변환, 멱등 `applyUsage`), `claudeCode.ts`·`codex.ts`(로그 한 줄→`UsageRecord`), `save.ts`(저장 파일 검증 `parseSave`). 새 규칙은 여기에 두고 테스트를 옆에 둔다.
 - `src/main/`: `index.ts`가 **펫 상태의 단일 출처**. 상태 변경은 `ingestUsage()` 하나로만 들어오고, 저장(`store.ts`)과 모든 창에 브로드캐스트를 함께 한다. `claudeLogs.ts`는 `~/.claude/projects/**/*.jsonl`을 30초마다 증분 읽기.
 - `src/preload/index.ts`: 렌더러에 노출하는 API는 여기 `api` 객체뿐(`ipcRenderer` 직접 노출 금지).
 - `src/renderer/`: 한 번들, 창마다 URL 해시(`#pet`/`#garden`)로 화면 분기. 상태는 `usePet()`로 main에서 받는다.
@@ -200,6 +200,7 @@ AI별 연동부는 가능한 경우 아래와 같은 공통 형식으로 변환�
 
 ### 반드시 지킬 동작 규칙
 - Claude Code 로그는 한 응답이 여러 줄로 중복 기록된다. 기록 ID는 `message.id|requestId`. `cache_read_input_tokens`는 제외한다.
-- 첫 실행은 과거 기록을 보상하지 않고 읽은 위치(`logOffsets`)만 저장한다(`null` = 기준선 없음).
+- 첫 확인은 과거 기록을 보상하지 않고 읽은 위치(`logOffsets`)만 저장한다(`null` = 기준선 없음). 기준선은 도구(로그 폴더)별로 따로 판단하므로, 새 도구를 지원해도 그 도구의 과거 기록은 보상되지 않는다.
+- Codex 로그: `~/.codex/sessions/**/*.jsonl`의 `token_count` 이벤트에서 이번 턴 사용량(`last_token_usage`)만 쓴다. 입력은 `input_tokens - cached_input_tokens`, 중복 방지 ID는 `timestamp|누적 총합`. `~/.codex/auth.json`은 절대 읽지 않는다.
 - 경험치 = (입력 + 출력×`OUTPUT_WEIGHT`(5)) ÷ `TOKENS_PER_XP`(30,000). 소수점은 버리지 않고 누적한다(기록 1건이 작아서 건건이 버리면 0이 된다). 비율은 실제 Claude Code 사용량(가중 토큰 하루 중위값 약 3M)으로 꽃 피움까지 약 2주가 되게 잡았다.
 - 개발 실행과 설치 앱은 같은 `%APPDATA%\tokengrove\save.json`을 공유한다.

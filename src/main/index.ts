@@ -5,7 +5,7 @@ import {EMPTY_SAVE} from '../shared/save'
 import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
 import {TOKENS_PER_XP, applyUsage, type CollectStatus, type UsageRecord} from '../shared/usage'
 import {loadSave, writeSave} from './store'
-import {defaultClaudeRoot, scanClaudeLogs, type Offsets} from './claudeLogs'
+import {defaultClaudeRoot, defaultCodexRoot, scanClaudeLogs, scanCodexLogs, type Offsets} from './claudeLogs'
 
 const TEST_PROVIDER = 'test'
 const TEST_TOKENS = 30 * TOKENS_PER_XP // 테스트 버튼 1회당 토큰(=30xp). 렌더러가 수치를 보내지 못하게 main에서 고정한다.
@@ -140,12 +140,27 @@ function ingestUsage(records: UsageRecord[]): number {
 
 const POLL_MS = 30_000
 
-// Claude Code 로그에서 새 사용 기록을 읽어 반영한다. 첫 실행은 기준선만 잡고 과거 기록은 보상하지 않는다.
-function pollClaudeLogs(): void {
+// 이 폴더의 로그를 이미 한 번 확인(기준선을 저장)했는지. 나중에 새로 지원하게 된 도구도 첫 확인 때는
+// 과거 기록을 보상하지 않고 기준선만 잡도록, 도구별로 따로 판단한다.
+// (도구는 설치돼 있지만 아직 로그 파일이 하나도 없던 경우에는 파일이 처음 생길 때 한 번 더 기준선만 잡는다.)
+const hasBaseline = (offsets: Offsets, root: string): boolean => Object.keys(offsets).some((p) => p.startsWith(root))
+
+// Claude Code와 Codex 로그에서 새 사용 기록을 읽어 반영한다. 첫 확인은 기준선만 잡고 과거 기록은 보상하지 않는다.
+function pollLogs(): void {
     const first = logOffsets === null
-    const {records, offsets} = scanClaudeLogs(defaultClaudeRoot(), logOffsets)
-    logOffsets = offsets
-    const gained = first || records.length > 0 ? ingestUsage(records) : 0
+    const known = logOffsets ?? {}
+    const claudeRoot = defaultClaudeRoot()
+    const codexRoot = defaultCodexRoot()
+    const claude = scanClaudeLogs(claudeRoot, hasBaseline(known, claudeRoot) ? known : null)
+    const codex = scanCodexLogs(codexRoot, hasBaseline(known, codexRoot) ? known : null)
+    const records = [...claude.records, ...codex.records]
+    // 새로 기준선을 잡은 도구가 있으면(로그 파일이 처음 보였을 때) 그 위치를 저장해야 한다
+    const newBaseline =
+        (!hasBaseline(known, claudeRoot) && Object.keys(claude.offsets).length > 0) ||
+        (!hasBaseline(known, codexRoot) && Object.keys(codex.offsets).length > 0)
+    // 이미 저장된 기준선에 이번에 새로 잡힌 기준선을 합친다. (파일이 지워진 항목은 자연스럽게 사라진다)
+    logOffsets = {...claude.offsets, ...codex.offsets}
+    const gained = first || records.length > 0 || newBaseline ? ingestUsage(records) : 0
     status = {lastCheckedAt: Date.now(), gainedXp: status.gainedXp + gained}
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('status:changed', status)
 }
@@ -192,8 +207,8 @@ app.whenReady().then(() => {
     petPos = save.petWindow
     settle() // 저장된 레벨이 이미 완성 기준을 넘었으면 바로 정원에 보관
     createPetWindow()
-    pollClaudeLogs()
-    setInterval(pollClaudeLogs, POLL_MS)
+    pollLogs()
+    setInterval(pollLogs, POLL_MS)
 })
 
 app.on('window-all-closed', () => {

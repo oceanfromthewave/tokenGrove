@@ -5,7 +5,7 @@
 </p>
 
 AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 앱입니다.
-평소처럼 Claude Code를 쓰면 바탕화면 위 작은 화분이 알아서 자랍니다. 따로 누를 것은 없습니다.
+평소처럼 Claude Code나 Codex를 쓰면 바탕화면 위 작은 화분이 알아서 자랍니다. 따로 누를 것은 없습니다.
 
 <p align="center">
   <img src="docs/sprite-preview.png" width="720" alt="10종 x 10단계 도트 식물">
@@ -15,7 +15,7 @@ AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 �
 
 - **펫 창**: 투명한 작은 창에 화분이 떠 있습니다. 끌어서 옮길 수 있고 다른 창 위에 항상 보입니다. 우클릭하면 메뉴(정원 열기, 시작 시 자동 실행, 종료)가 나옵니다.
 - **정원 창**: 펫 창의 `정원` 버튼으로 엽니다. 현재 식물의 레벨과 경험치, 성장 기록, 완성한 식물 도감을 볼 수 있습니다.
-- **성장**: Claude Code가 남기는 로그에서 토큰 수만 읽어 경험치로 바꿉니다. 30초마다 새로 추가된 부분만 확인합니다.
+- **성장**: Claude Code와 Codex가 남기는 로그에서 토큰 수만 읽어 경험치로 바꿉니다. 30초마다 새로 추가된 부분만 확인합니다.
 - **완성**: 레벨 11에 도달하면 식물이 정원 도감에 보관되고, 새 씨앗이 무작위 종으로 시작됩니다.
 
 ### 성장 단계 (10단계)
@@ -35,7 +35,7 @@ AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 �
 경험치 = (입력 토큰 + 출력 토큰 × 5) ÷ 30,000
 ```
 
-- 입력 토큰은 `input_tokens + cache_creation_input_tokens` 입니다.
+- Claude Code의 입력 토큰은 `input_tokens + cache_creation_input_tokens`, Codex는 `input_tokens - cached_input_tokens` 입니다.
 - 캐시를 다시 읽은 토큰(`cache_read_input_tokens`)은 세지 않습니다. 같은 문맥을 매번 다시 읽는 값이라 포함하면 사용량이 지나치게 부풀기 때문입니다.
 - 같은 응답이 로그에 여러 줄로 기록되므로 `message.id`와 `requestId`로 중복을 제거합니다.
 - 앱을 처음 실행하기 전에 쌓인 기록은 경험치로 반영하지 않습니다. 처음에는 현재 위치만 기억합니다.
@@ -46,7 +46,7 @@ AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 �
 
 - 모든 처리는 내 PC 안에서만 이루어지며 외부로 전송하는 것이 없습니다.
 - 로그에서는 기록 ID, 시각, 토큰 숫자만 꺼냅니다. 프롬프트나 대화 내용, 코드는 저장하지도 출력하지도 않습니다.
-- 원본 로그(`~/.claude/projects/**/*.jsonl`)는 읽기만 하고 수정하지 않습니다.
+- 원본 로그(`~/.claude/projects/**/*.jsonl`, `~/.codex/sessions/**/*.jsonl`)는 읽기만 하고 수정하지 않습니다.
 - 저장 파일은 `%APPDATA%\tokengrove\save.json` 하나뿐입니다.
 
 ## 실행하기
@@ -82,7 +82,7 @@ npm run build:win      # dist\Token Grove-Setup-<버전>.exe
 src/
 ├─ shared/     순수 로직. Electron에 의존하지 않고 테스트를 옆에 둔다.
 │              growth(레벨·단계·종·완성), usage(기록 모델·경험치·중복 방지),
-│              claudeCode(로그 한 줄 변환), save(저장 파일 검증), sprites(도트 그림)
+│              claudeCode·codex(로그 한 줄 변환), save(저장 파일 검증), sprites(도트 그림)
 ├─ main/       창 관리, 펫 상태의 단일 출처, 저장, 로그 증분 읽기
 ├─ preload/    렌더러에 노출하는 제한된 API
 └─ renderer/   React 화면 (펫 창, 정원 창)
@@ -94,7 +94,7 @@ src/
 
 ## 현재 한계
 
-- 지원하는 로그는 **Claude Code**뿐입니다. Codex 등은 아직 연동하지 않았습니다.
+- 지원하는 로그는 **Claude Code**와 **Codex**입니다. 다른 도구는 아직 연동하지 않았습니다.
 - Windows에서만 확인했습니다.
 - 경험치 환산 비율은 개발자 PC의 사용량으로 정한 값이라 사람에 따라 성장 속도가 다를 수 있습니다.
 
