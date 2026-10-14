@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
-import {DECOR, DECOR_COLORS, RAINBOW_COLORS, rainbowRows, type DecorId} from '../../../shared/decor'
+import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
 import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
 import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
 import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
@@ -11,6 +11,7 @@ import SpeciesDetail from './SpeciesDetail'
 
 // 칸 단위로 만든 무지개 (한 번만 계산)
 const RAINBOW = rainbowRows()
+const MOON = moonRows()
 
 // 오늘 사용량에 따른 정원 날씨 이름
 const WEATHER_NAME: Record<Weather, string> = {overcast: '흐림', cloudy: '구름 조금', sunny: '맑음', rainbow: '무지개'}
@@ -69,7 +70,7 @@ function GardenView(): React.JSX.Element {
     return (
         <div className="garden">
             <div className={`scene ${tod} w-${weather}`}>
-                <div className="sun"/>
+                <div className="sun">{tod === 'night' && <PixelArt rows={MOON} colors={MOON_COLORS} scale={4}/>}</div>
                 <div className="stars"/>
                 <div className="cloud c1"/>
                 <div className="cloud c2"/>

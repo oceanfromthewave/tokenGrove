@@ -38,3 +38,20 @@ export function rainbowRows(): string[] {
 }
 
 export const RAINBOW_COLORS: Record<string, string> = {r: '#e5484d', o: '#ff9a3d', y: '#ffd84d', g: '#6bbf59', b: '#5aa0ff', v: '#9b6fe0'}
+
+// 초승달: 반지름 5.4인 원에서 오른쪽 위로 비껴 놓은 원을 빼면 왼쪽이 불룩한 초승달이 된다.
+export const MOON_SIZE = 12
+
+export function moonRows(): string[] {
+    const c = MOON_SIZE / 2
+    return Array.from({length: MOON_SIZE}, (_, y) =>
+        Array.from({length: MOON_SIZE}, (_, x) => {
+            const inDisk = Math.hypot(x + 0.5 - c, y + 0.5 - c) <= 5.4
+            const inBite = Math.hypot(x + 0.5 - (c + 2.7), y + 0.5 - (c - 1.2)) <= 4.6
+            if (!inDisk || inBite) return '.'
+            return Math.hypot(x + 0.5 - c, y + 0.5 - c) > 4.2 ? 'n' : 'm' // 바깥쪽 가장자리는 한 톤 어둡게
+        }).join('')
+    )
+}
+
+export const MOON_COLORS: Record<string, string> = {m: '#f6f2d2', n: '#d9d3a0'}

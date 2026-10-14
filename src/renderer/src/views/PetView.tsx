@@ -1,7 +1,10 @@
 import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
+import PixelArt from '../components/PixelArt'
 import {formatXp, stageOf, xpToNextLevel} from '../../../shared/growth'
+import {pickChatter} from '../../../shared/chatter'
 import {petEvent, type PetEvent} from '../../../shared/events'
+import {currentStreak, dateKey} from '../../../shared/stats'
 import {useGame} from '../usePet'
 
 interface Burst {
@@ -10,6 +13,10 @@ interface Burst {
     gain: number // 경험치 증가량 (xp 효과에만 사용)
 }
 
+// 클릭했을 때 떠오르는 하트
+const HEART = ['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..']
+const HEART_COLORS = {r: '#ff6b8a'}
+
 // 레벨업/성장 때 사방으로 튀는 반짝이 8개의 이동 방향
 const SPARKS = Array.from({length: 8}, (_, i) => {
     const a = (i * Math.PI) / 4
@@ -17,11 +24,12 @@ const SPARKS = Array.from({length: 8}, (_, i) => {
 })
 
 function PetView(): React.JSX.Element {
-    const {pet, loaded} = useGame()
+    const {pet, stats, loaded} = useGame()
     const stage = stageOf(pet.level)
     const drag = useRef<{ x: number; y: number } | null>(null) // 끌기 시작 시 마우스 화면 좌표
     const prev = useRef<typeof pet | null>(null)
     const [burst, setBurst] = useState<Burst | null>(null)
+    const [chat, setChat] = useState<{ id: number; text: string } | null>(null) // 클릭했을 때의 말풍선
 
     // 상태가 바뀌면 어떤 효과를 보여줄지 정한다. 처음 받아온 상태는 비교 대상이 없어서 효과 없음.
     useEffect(() => {
@@ -38,6 +46,12 @@ function PetView(): React.JSX.Element {
         return () => clearTimeout(t)
     }, [burst])
 
+    useEffect(() => {
+        if (!chat) return
+        const t = setTimeout(() => setChat(null), 2800)
+        return () => clearTimeout(t)
+    }, [chat])
+
     const big = burst !== null && burst.kind !== 'xp' // 레벨업, 성장, 새 씨앗
 
     return (
@@ -52,10 +66,17 @@ function PetView(): React.JSX.Element {
             onPointerMove={(e) => {
                 if (drag.current) window.api.dragMove(e.screenX - drag.current.x, e.screenY - drag.current.y)
             }}
-            onPointerUp={() => {
-                if (!drag.current) return
+            onPointerUp={(e) => {
+                const start = drag.current
+                if (!start) return
                 drag.current = null
                 window.api.dragEnd()
+                // 거의 움직이지 않았으면 끌기가 아니라 클릭이다. 말을 건다.
+                if (Math.hypot(e.screenX - start.x, e.screenY - start.y) < 5) {
+                    const now = new Date()
+                    const todayXp = stats.daily[dateKey(now)] ?? 0
+                    setChat({id: Date.now(), text: pickChatter({pet, todayXp, streak: currentStreak(stats, now), hour: now.getHours()})})
+                }
             }}
         >
             <div className="stage-box">
@@ -72,6 +93,18 @@ function PetView(): React.JSX.Element {
                         {burst.kind === 'newSeed' ? '새 씨앗!' : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
                     </div>
                 )}
+                {chat && (
+                    <div key={`c${chat.id}`} className="bubble">{chat.text}</div>
+                )}
+                {chat && [0, 1, 2].map((i) => (
+                    <span
+                        key={`h${chat.id}-${i}`}
+                        className="heart"
+                        style={{'--hx': `${(i - 1) * 20}px`, animationDelay: `${i * 0.12}s`} as React.CSSProperties}
+                    >
+                        <PixelArt rows={HEART} colors={HEART_COLORS} scale={2}/>
+                    </span>
+                ))}
                 {burst?.kind === 'xp' && <div key={`g${burst.id}`} className="gain">+{formatXp(burst.gain)}</div>}
             </div>
             <div className="status">
