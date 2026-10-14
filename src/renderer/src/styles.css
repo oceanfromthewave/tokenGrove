@@ -206,9 +206,9 @@ body,
   width: 116px;
   padding: 3px 6px 4px;
   text-align: center;
-  background: #8fd0ff; /* 하늘색 */
+  background: #cde9ff; /* 연한 하늘색 */
   border: 2px solid #2a1c12;
-  box-shadow: inset 2px 2px 0 #b9e3ff, inset -2px -2px 0 #6fb4ea, 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: inset 2px 2px 0 #e8f5ff, inset -2px -2px 0 #a9d4f5, 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 .status {
@@ -219,14 +219,14 @@ body,
 .xpbar {
   height: 6px;
   margin: 3px 0 2px;
-  background: #e8f5ff;
+  background: #f6fbff;
   border: 1px solid #2a1c12;
 }
 
 .xpbar i {
   display: block;
   height: 100%;
-  background: repeating-linear-gradient(90deg, #4f9a40 0 4px, #66b552 4px 6px); /* 도트처럼 칸이 나뉜 막대 */
+  background: repeating-linear-gradient(90deg, #2379c9 0 4px, #3a93e0 4px 6px); /* 진한 하늘색, 도트처럼 칸이 나뉜 막대 */
 }
 
 .xptext {
