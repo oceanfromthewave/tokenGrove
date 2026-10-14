@@ -1,4 +1,4 @@
-import {INITIAL_PET, addXp, isSpeciesId, type Completed, type PetState} from './growth.ts'
+import {INITIAL_PET, addXp, isSpeciesId, isStageId, type Completed, type GrowthMark, type PetState} from './growth.ts'
 import {DEFAULT_SETTINGS, parseSettings, type Settings} from './settings.ts'
 import {parseVersion} from './version.ts'
 import {EMPTY_STATS, type Stats} from './stats.ts'
@@ -18,6 +18,20 @@ export interface SaveData {
 export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, settings: DEFAULT_SETTINGS, skippedVersion: null, logOffsets: null}
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+const parseName = (v: unknown): string | undefined => typeof v === 'string' ? v.trim().slice(0, 24) : undefined
+
+function parseGrowthHistory(v: unknown): GrowthMark[] | undefined {
+    if (!Array.isArray(v)) return undefined
+    return v.filter((m: unknown): m is GrowthMark =>
+        !!m && typeof m === 'object' && isStageId((m as GrowthMark).stage) &&
+        typeof (m as GrowthMark).at === 'string' && (m as GrowthMark).at.length <= 40 &&
+        ((m as GrowthMark).kind === undefined || (m as GrowthMark).kind === 'start' || (m as GrowthMark).kind === 'stage')
+    ).slice(0, 20).map((m) => ({
+        stage: m.stage,
+        at: m.at,
+        ...(m.kind ? {kind: m.kind} : {})
+    }))
+}
 
 // 저장 파일 내용을 SaveData로 바꾼다. 형식이 이상하면 새로 시작(EMPTY_SAVE)한다.
 export function parseSave(text: string): SaveData {
@@ -25,6 +39,8 @@ export function parseSave(text: string): SaveData {
         const raw = JSON.parse(text)
         const {level, xp} = raw.pet
         const species = isSpeciesId(raw.pet.species) ? raw.pet.species : INITIAL_PET.species // 옛 저장 파일 호환
+        const name = parseName(raw.pet.name)
+        const growthHistory = parseGrowthHistory(raw.pet.growthHistory)
         // 상한은 addXp 반복 횟수가 터무니없이 커지는 것을 막기 위한 안전장치
         if (!Number.isInteger(level) || level < 1 || level > 9999) return EMPTY_SAVE
         if (!isNum(xp) || xp < 0 || xp > 1e9) return EMPTY_SAVE
@@ -46,7 +62,12 @@ export function parseSave(text: string): SaveData {
         const collection: Completed[] = Array.isArray(raw.collection)
             ? raw.collection
                 .filter((c: Completed) => isSpeciesId(c?.species) && typeof c.completedAt === 'string' && c.completedAt.length <= 40)
-                .map((c: Completed) => ({species: c.species, completedAt: c.completedAt}))
+                .map((c: Completed) => ({
+                    species: c.species,
+                    completedAt: c.completedAt,
+                    ...(parseName(c.name) ? {name: parseName(c.name)} : {}),
+                    ...(parseGrowthHistory(c.growthHistory) ? {growthHistory: parseGrowthHistory(c.growthHistory)} : {})
+                }))
                 .slice(0, 10_000)
             : []
         const dailyRaw = raw.stats?.daily
@@ -60,7 +81,12 @@ export function parseSave(text: string): SaveData {
         const best = raw.stats?.bestStreak
         const bestStreak = Number.isInteger(best) && best >= 0 && best <= 100_000 ? best : 0
         // 레벨 기준보다 xp가 크면 레벨업으로 정리
-        return {pet: addXp({level, xp: 0, species}, xp), petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), skippedVersion: parseVersion(raw.skippedVersion) ? (raw.skippedVersion as string).replace(/^v/, '') : null, logOffsets}
+        const pet: PetState = {
+            ...addXp({level, xp: 0, species}, xp),
+            ...(name !== undefined ? {name} : {}),
+            ...(growthHistory !== undefined ? {growthHistory} : {})
+        }
+        return {pet, petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), skippedVersion: parseVersion(raw.skippedVersion) ? (raw.skippedVersion as string).replace(/^v/, '') : null, logOffsets}
     } catch {
         return EMPTY_SAVE
     }

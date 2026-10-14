@@ -1,12 +1,13 @@
 import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
-import {SPECIES, STAGES, type SpeciesId} from '../../../shared/growth'
+import {SPECIES, STAGES, type Completed, type SpeciesId} from '../../../shared/growth'
 
 // 도감에서 고른 종의 상세. 슬라이더로 씨앗부터 큰 나무까지 성장 과정을 넘겨볼 수 있다.
-function SpeciesDetail({species, count, lastAt}: {
+function SpeciesDetail({species, count, lastAt, plants}: {
     species: SpeciesId
     count: number
     lastAt: string
+    plants: Completed[]
 }): React.JSX.Element {
     const [step, setStep] = useState(STAGES.length - 1)
     const stage = STAGES[step]
@@ -27,6 +28,27 @@ function SpeciesDetail({species, count, lastAt}: {
             />
             <div className="detail-meta">
                 {count}번 완성 · 마지막 {new Date(lastAt).toLocaleDateString()}
+            </div>
+            <h3>완성한 식물 기록</h3>
+            <div className="plant-records">
+                {[...plants].reverse().map((plant, i) => (
+                    <details key={`${plant.completedAt}-${i}`}>
+                        <summary>{plant.name || `${name} ${plants.length - i}`} · {new Date(plant.completedAt).toLocaleDateString()}</summary>
+                        {plant.growthHistory?.length ? (
+                            <ol className="timeline compact">
+                                {plant.growthHistory.map((mark, j) => {
+                                    const reached = STAGES.find((s) => s.id === mark.stage)
+                                    return (
+                                        <li key={`${mark.at}-${mark.stage}-${j}`}>
+                                            <b>{reached?.name ?? mark.stage}</b>
+                                            <time>{mark.kind === 'start' ? '기록 시작 · ' : ''}{new Date(mark.at).toLocaleString()}</time>
+                                        </li>
+                                    )
+                                })}
+                            </ol>
+                        ) : <small>이 식물의 성장 기록은 없어요.</small>}
+                    </details>
+                ))}
             </div>
         </div>
     )

@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
 import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
@@ -44,9 +44,12 @@ function GardenView(): React.JSX.Element {
     const {pet, collection, stats} = useGame()
     const status = useStatus()
     const [selected, setSelected] = useState<SpeciesId | null>(null)
+    const [plantName, setPlantName] = useState(pet.name ?? '')
     const root = useRef<HTMLDivElement>(null)
     const sceneRef = useRef<HTMLDivElement>(null)
     const [toast, setToast] = useState('')
+
+    useEffect(() => setPlantName(pet.name ?? ''), [pet.name])
 
     // 풍경 부분을 PNG로 저장한다. 스크롤이 내려가 있으면 풍경이 화면 밖이라 먼저 맨 위로 올린다.
     const savePhoto = async (): Promise<void> => {
@@ -57,6 +60,15 @@ function GardenView(): React.JSX.Element {
         const result = await window.api.exportGarden({x: box.x, y: box.y, width: box.width, height: box.height})
         setToast(result === 'saved' ? '사진을 저장했어요' : result === 'error' ? '저장하지 못했어요' : '')
         if (result !== 'canceled') setTimeout(() => setToast(''), 2500)
+    }
+    const savePlantName = async (): Promise<void> => {
+        try {
+            await window.api.setPetName(plantName)
+            setToast('이름을 저장했어요')
+        } catch {
+            setToast('이름을 저장하지 못했어요')
+        }
+        setTimeout(() => setToast(''), 2500)
     }
     const stage = stageOf(pet.level)
     const nextStage = STAGES.find((s) => s.minLevel > stage.minLevel)
@@ -80,6 +92,9 @@ function GardenView(): React.JSX.Element {
         })
     }
     const picked = selected ? owned.get(selected) : undefined
+    const selectedPlants = selected
+        ? collection.filter((c) => c.species === selected).sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+        : []
 
     return (
         <div className="garden" ref={root}>
@@ -124,8 +139,21 @@ function GardenView(): React.JSX.Element {
 
             <div className="panel">
                 <div className="name-row">
-                    <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                    <div className="garden-heading">
+                        <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                    </div>
                     <button className="photo-btn" onClick={savePhoto}>사진 저장</button>
+                </div>
+                <div className="plant-name-edit">
+                    <input
+                        value={plantName}
+                        maxLength={24}
+                        placeholder="식물 이름"
+                        aria-label="현재 식물 이름"
+                        onChange={(e) => setPlantName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') void savePlantName() }}
+                    />
+                    <button className="photo-btn" onClick={() => void savePlantName()}>이름 저장</button>
                 </div>
                 {toast && <div className="toast">{toast}</div>}
                 <div className="bar" title={`${formatXp(pet.xp)}/${need} XP`}>
@@ -172,7 +200,7 @@ function GardenView(): React.JSX.Element {
                     })}
                 </div>
                 {selected && picked && (
-                    <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt}/>
+                    <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt} plants={selectedPlants}/>
                 )}
                 {collection.length === 0 && <p className="empty">큰 나무까지 키워 완성하면 이곳에 심어져요.</p>}
 
@@ -186,7 +214,19 @@ function GardenView(): React.JSX.Element {
                     ))}
                 </div>
 
-                <h2>성장 기록</h2>
+                <h2>현재 식물 성장 기록</h2>
+                <ol className="timeline">
+                    {(pet.growthHistory ?? []).map((mark, i) => {
+                        const markStage = STAGES.find((s) => s.id === mark.stage)
+                        return (
+                            <li key={`${mark.at}-${mark.stage}-${i}`}>
+                                <b>{markStage?.name ?? mark.stage}</b>
+                                <time>{mark.kind === 'start' ? '기록 시작 · ' : ''}{new Date(mark.at).toLocaleString()}</time>
+                            </li>
+                        )
+                    })}
+                </ol>
+                <h2>성장 단계</h2>
                 <ul className="stages">
                     {STAGES.map((s) => (
                         <li key={s.id} className={pet.level >= s.minLevel ? 'done' : 'locked'}>

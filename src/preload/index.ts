@@ -13,6 +13,7 @@ export interface AppState {
 // 렌더러에 노출할 기능은 여기 적힌 것뿐이다. (ipcRenderer 자체는 노출하지 않는다)
 const api = {
     getState: (): Promise<AppState> => ipcRenderer.invoke('state:get'),
+    setPetName: (name: string): Promise<AppState> => ipcRenderer.invoke('pet:setName', name),
     addTestXp: (): Promise<AppState> => ipcRenderer.invoke('pet:addTestXp'),
     getStatus: (): Promise<CollectStatus> => ipcRenderer.invoke('status:get'),
     onStatusChanged: (cb: (s: CollectStatus) => void): (() => void) => {

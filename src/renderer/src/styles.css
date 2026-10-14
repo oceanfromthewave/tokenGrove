@@ -652,6 +652,12 @@ body,
   opacity: 0.85;
 }
 
+.detail h3 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  text-align: left;
+}
+
 .detail input {
   width: 80%;
   margin: 8px 0;
@@ -678,6 +684,61 @@ body,
 
 .stages li.locked {
   opacity: 0.45;
+}
+
+.timeline {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.timeline li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #2d5a3d;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.timeline time {
+  font-size: 10px;
+  opacity: 0.8;
+  text-align: right;
+}
+
+.timeline.compact {
+  margin-top: 6px;
+}
+
+.plant-records {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.plant-records details {
+  padding: 6px 8px;
+  background: #244934;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.plant-records summary {
+  cursor: pointer;
+}
+
+.plant-records small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 /* 날씨: 오늘 사용량에 따라 바뀐다 */
@@ -966,10 +1027,48 @@ body,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .name-row .garden-name {
   margin-bottom: 6px;
+}
+
+.garden-heading {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.plant-name-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.plant-name-edit input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding: 4px 6px;
+  font: 12px sans-serif;
+  color: #e8f3e0;
+  background: #14281c;
+  border: 1px solid #567a63;
+  border-radius: 6px;
+  outline: none;
+}
+
+.plant-name-edit input:focus {
+  border-color: #8fd36b;
+  box-shadow: 0 0 0 2px rgb(143 211 107 / 22%);
+}
+
+.plant-name-edit .photo-btn {
+  white-space: nowrap;
 }
 
 .photo-btn {

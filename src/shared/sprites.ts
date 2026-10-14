@@ -457,16 +457,16 @@ const style = (kind: Kind, leaf: LeafStyle, colors: Record<string, string>): Sty
 }
 
 const SPECIES_STYLE: Record<SpeciesId, Style> = {
-    daisy: style('daisy', 'blade', {f: '#ffffff', y: '#ffd84d', r: '#e5484d'}),
+    daisy: style('daisy', 'blade', {f: '#ffffff', y: '#ffd84d', r: '#ffffff'}),
     sunflower: style('sunflower', 'broad', {g: '#6fb842', G: '#a3dd6a', h: '#4a8a2e', t: '#4a7f2e', f: '#ffc928', y: '#6b3f1d', r: '#8b5a2b'}),
-    tulip: style('tulip', 'blade', {g: '#4fa665', G: '#82d38e', h: '#337a4a', t: '#357a45', f: '#e5484d', y: '#b3202a', r: '#f5a623'}),
+    tulip: style('tulip', 'blade', {g: '#4fa665', G: '#82d38e', h: '#337a4a', t: '#357a45', f: '#e5484d', y: '#b3202a', r: '#e5484d'}),
     bellflower: style('bell', 'slim', {g: '#6aa87a', G: '#9bd6a8', h: '#417a56', t: '#3f7a49', f: '#9b6fe0', y: '#ffe27a', r: '#6b3fa0'}),
-    rose: style('rose', 'broad', {g: '#3f8f5a', G: '#68bd7f', h: '#2a6a41', t: '#2f6e45', f: '#e0345a', y: '#a8183a', r: '#f5a623'}),
+    rose: style('rose', 'broad', {g: '#3f8f5a', G: '#68bd7f', h: '#2a6a41', t: '#2f6e45', f: '#e0345a', y: '#a8183a', r: '#e5484d'}),
     lavender: style('spike', 'slim', {g: '#7fae8a', G: '#a9d1b2', h: '#58856a', t: '#58856a', f: '#a78bda', y: '#7a5cc0', r: '#7a5cc0'}),
     hydrangea: style('ball', 'broad', {g: '#4e9e6a', G: '#7fcb97', h: '#35755a', t: '#35755a', f: '#7fb3ff', y: '#c7dcff', r: '#5a8fe0', C: '#a8cbff', c: '#7fb3ff', e: '#5a8fe0'}),
-    poppy: style('poppy', 'blade', {g: '#6aa84f', G: '#9bd16f', h: '#44803a', t: '#44803a', f: '#f0431f', y: '#3a1d12', Y: '#ffb03d', z: '#140806', r: '#ffb03d'}),
-    cosmos: style('cosmos', 'slim', {g: '#6bb26a', G: '#9cdb8a', h: '#468a4a', t: '#468a4a', f: '#ff9ccf', y: '#ffd84d', r: '#ff6fb0'}),
-    cherry: style('cherry', 'blade', {g: '#7a9a55', G: '#a9c97a', h: '#58774a', t: '#6b4a2b', f: '#ffb7d0', y: '#ff8fb3', r: '#e5484d', C: '#ffd6e6', c: '#ffb7d0', e: '#f28fb0'})
+    poppy: style('poppy', 'blade', {g: '#6aa84f', G: '#9bd16f', h: '#44803a', t: '#44803a', f: '#f0431f', y: '#3a1d12', Y: '#ffb03d', z: '#140806', r: '#e5484d'}),
+    cosmos: style('cosmos', 'slim', {g: '#6bb26a', G: '#9cdb8a', h: '#468a4a', t: '#468a4a', f: '#ff9ccf', y: '#ffd84d', r: '#e5484d'}),
+    cherry: style('cherry', 'blade', {g: '#7a9a55', G: '#a9c97a', h: '#58774a', t: '#6b4a2b', f: '#ffb7d0', y: '#ff8fb3', r: '#ff9fc0', C: '#ffd6e6', c: '#ffb7d0', e: '#f28fb0'})
 }
 
 // 빛이 왼쪽 위에서 온다고 보고, 오른쪽 절반의 잎과 수관을 한 단계 어둡게, 화분 오른쪽 끝은 그림자로 칠한다.

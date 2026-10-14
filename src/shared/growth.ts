@@ -18,10 +18,20 @@ export type SpeciesId = (typeof SPECIES)[number]['id']
 
 export const isSpeciesId = (v: unknown): v is SpeciesId => SPECIES.some((s) => s.id === v)
 
+export type StageId = (typeof STAGES)[number]['id']
+
+export interface GrowthMark {
+    stage: StageId
+    at: string
+    kind?: 'start' | 'stage'
+}
+
 export interface PetState {
     level: number
     xp: number // 현재 레벨에서 쌓인 경험치
     species: SpeciesId
+    name?: string
+    growthHistory?: GrowthMark[]
 }
 
 export const INITIAL_PET: PetState = {level: 1, xp: 0, species: 'daisy'}
@@ -30,6 +40,8 @@ export const INITIAL_PET: PetState = {level: 1, xp: 0, species: 'daisy'}
 export interface Completed {
     species: SpeciesId
     completedAt: string // ISO 시각
+    name?: string
+    growthHistory?: GrowthMark[]
 }
 
 // 이 레벨에 도달하면 완성된 것으로 보고 정원에 보관한 뒤 새 씨앗을 시작한다.
@@ -50,7 +62,13 @@ export function harvestIfReady(
     rand: () => number = Math.random
 ): { pet: PetState; collection: Completed[] } {
     if (pet.level < HARVEST_LEVEL) return {pet, collection}
-    return {pet: newSeed(rand), collection: [...collection, {species: pet.species, completedAt: now}]}
+    const completed: Completed = {
+        species: pet.species,
+        completedAt: now,
+        ...(pet.name ? {name: pet.name} : {}),
+        ...(pet.growthHistory ? {growthHistory: pet.growthHistory} : {})
+    }
+    return {pet: newSeed(rand), collection: [...collection, completed]}
 }
 
 // 화면 표시용. 소수 첫째 자리까지 버림으로 보여준다. (경험치는 소수로 쌓이므로 정수만 보이면 오르는 게 안 보인다)
@@ -88,7 +106,7 @@ export const STAGES = [
     {id: 'tree', name: '큰 나무', minLevel: 10}
 ] as const
 
-export type StageId = (typeof STAGES)[number]['id']
+export const isStageId = (v: unknown): v is StageId => STAGES.some((s) => s.id === v)
 
 export function stageOf(level: number): (typeof STAGES)[number] {
     return STAGES.findLast((s) => level >= s.minLevel) ?? STAGES[0]

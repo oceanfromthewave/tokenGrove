@@ -1,7 +1,7 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
 import {writeFile} from 'fs/promises'
 import {join} from 'path'
-import {INITIAL_PET, SPECIES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
+import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
 import {parseRect} from '../shared/exportRect'
 import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '../shared/settings'
@@ -193,15 +193,34 @@ function broadcastState(): void {
 }
 
 // 완성 레벨에 도달했으면 정원에 보관하고 새 씨앗을 시작한다.
-function settle(): boolean {
-    const r = harvestIfReady(pet, collection, new Date().toISOString())
+function settle(now = new Date().toISOString()): boolean {
+    const r = harvestIfReady(pet, collection, now)
     const done = r.pet !== pet
     pet = r.pet
     collection = r.collection
+    if (done) pet = {...pet, name: '', growthHistory: [{stage: 'seed', at: now, kind: 'start'}]}
     return done
 }
 
+function recordStageChanges(before: PetState, after: PetState, at: string): PetState {
+    if (before.species !== after.species || after.level <= before.level) return after
+    const reached = STAGES.filter((s) => before.level < s.minLevel && after.level >= s.minLevel)
+    if (!reached.length) return after
+    const growthHistory = [
+        ...(before.growthHistory ?? []),
+        ...reached.map((s) => ({stage: s.id, at, kind: 'stage' as const}))
+    ].slice(-20)
+    return {...after, growthHistory}
+}
+
 ipcMain.handle('state:get', getState)
+ipcMain.handle('pet:setName', (_e, value: unknown) => {
+    if (typeof value !== 'string') return getState()
+    pet = {...pet, name: value.trim().slice(0, 24)}
+    persist()
+    broadcastState()
+    return getState()
+})
 ipcMain.handle('status:get', () => status)
 ipcMain.handle('settings:get', () => settings)
 ipcMain.handle('settings:set', (_e, patch: unknown) => {
@@ -227,12 +246,13 @@ function ingestUsage(records: UsageRecord[]): number {
     const before = pet
     const result = applyUsage(pet, processed, records, SPEED_MULTIPLIER[settings.speed])
     const changed = result.processed !== processed
-    pet = result.pet
+    const now = new Date().toISOString()
+    pet = recordStageChanges(before, result.pet, now)
     processed = result.processed
     // 테스트 버튼으로 얻은 경험치는 통계와 알림에 넣지 않는다. (실제 사용량만)
     const real = records.some((r) => r.provider !== TEST_PROVIDER)
     if (real) stats = recordGain(stats, result.gainedXp, dateKey(new Date()))
-    const harvested = settle()
+    const harvested = settle(now)
     if (real) notifyGrowth(before)
     persist() // 읽은 위치(logOffsets)도 함께 저장된다
     if (changed || harvested) broadcastState()
@@ -328,6 +348,13 @@ ipcMain.on('pet:dragEnd', (e) => {
 app.whenReady().then(() => {
     const save = loadSave()
     pet = save === EMPTY_SAVE ? newSeed() : save.pet // 첫 실행(또는 저장 파일 없음/손상)은 무작위 씨앗
+    pet = {
+        ...pet,
+        name: pet.name ?? '',
+        growthHistory: pet.growthHistory?.length
+            ? pet.growthHistory
+            : [{stage: stageOf(pet.level).id, at: new Date().toISOString(), kind: 'start'}]
+    }
     collection = save.collection
     stats = save.stats
     settings = save.settings
