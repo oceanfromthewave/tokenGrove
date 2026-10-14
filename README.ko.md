@@ -1,6 +1,8 @@
 # Token Grove
 
-*[English](README.md)*
+<p align="center">
+  <a href="README.md">English</a> · <b>한국어</b>
+</p>
 
 AI 코딩 도구를 쓴 만큼 도트 식물이 자라는 Windows 데스크톱 앱입니다.
 평소처럼 Claude Code를 쓰면 바탕화면 위 작은 화분이 알아서 자랍니다. 따로 누를 것은 없습니다.

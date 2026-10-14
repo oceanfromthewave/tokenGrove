@@ -1,6 +1,8 @@
 # Token Grove
 
-*[한국어](README.ko.md)*
+<p align="center">
+  <b>English</b> · <a href="README.ko.md">한국어</a>
+</p>
 
 A Windows desktop app that grows a pixel-art plant from your AI coding usage.
 Use Claude Code as you normally do and a small flower pot on your desktop grows by itself. There is nothing to click.
