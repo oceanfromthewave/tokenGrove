@@ -201,6 +201,9 @@ function flowerGrid(kind: Kind, d: number): string[] {
     return radial(kind, d, Math.round(d * 0.66))
 }
 
+// 씨앗: 밝은 갈색 타원에 하이라이트와 그림자
+const SEED = ['..BBb.', '.BBbbk', 'BBbbkk', '.bkkk.']
+
 // 꽃봉오리: 꽃 색 물방울 + 아래 초록 꽃받침
 function bud(): string[] {
     const w = 7, h = 9
@@ -217,6 +220,119 @@ function bud(): string[] {
 // 열매: 동그란 열매에 하이라이트와 그림자
 const FRUIT5 = ['.rrr.', 'rQrrr', 'rrrrx', 'rrrxx', '.xxx.']
 const FRUIT4 = ['.rr.', 'rQrr', 'rrrx', '.xx.']
+
+// 종마다 열매 모양이 다르다. (r Q x = 열매 색, g G h = 초록, f F E = 꽃 색, y Y z = 꽃술 색)
+const HIP = ['..h..', '.rrr.', 'rQrrr', 'rrrrr', 'rrrrx', '.rrx.', '..x..'] // 장미 열매: 위에 꽃받침이 남은 타원
+const POD = ['.kkk.', 'kkkkk', 'rQrrr', 'rrrrx', 'rrrxx', '.rxx.'] // 양귀비 씨앗 주머니: 갈색 왕관 꼭대기
+const CAPSULE = ['.hFh.', 'rQrrr', 'rrrrr', 'rrrrx', '.rrx.'] // 도라지: 별 모양 꼭지가 달린 풍선
+const TULIP_POD = ['.rr.', 'rQrr', 'rrrx', 'rxrx', 'rxrx', 'rrrx', '.rrx', '..x.'] // 튤립: 세로 줄이 있는 길쭉한 씨앗 주머니
+const PUFF = ['..FF..', '.FfFF.', 'FFFfFF', 'FfFFFf', '.FFfF.', '..FF..'] // 코스모스: 솜털 씨앗
+// 라벤더: 시든 이삭 (꽃 색을 어둡게)
+const dry = (g: string[]): string[] => g.map((row) => row.replace(/f/g, 'E'))
+
+// 해바라기 씨앗 머리: 씨앗 무늬 원반 + 시든 꽃잎이 아래쪽에 조금 남아 있다
+function seedHead(d: number, h: number): string[] {
+    return Array.from({length: h}, (_, y) =>
+        Array.from({length: d}, (_, x) => {
+            const nx = (x + 0.5 - d / 2) / (d / 2), ny = (y + 0.5 - h / 2) / (h / 2)
+            const r = Math.hypot(nx, ny)
+            if (r > 1) return '.'
+            if (r > 0.86) return ny > 0.2 && nx > -0.2 ? 'E' : 'z' // 가장자리: 아래쪽은 시든 꽃잎 색
+            const light = -(nx * 0.55 + ny * 0.85)
+            return (x * 7 + y * 3) % 5 === 0 ? 'Y' : light > 0.35 ? 'Y' : 'y'
+        }).join('')
+    )
+}
+
+// 열매를 놓는 도구: 가지 끝(tipX, tipY)에서 아래로 매달리거나(hang), 위로 서 있다(stand)
+function fruitLayer(kind: Kind, l: Layer): void {
+    const hang = (sx: number, sy: number, tx: number, ty: number, g: string[]): void => {
+        l.line(sx, sy, tx, ty)
+        l.stamp(ty, tx - Math.floor(g[0].length / 2), g)
+    }
+    const stand = (sx: number, sy: number, tx: number, ty: number, g: string[]): void => {
+        l.line(sx, sy, tx, ty)
+        l.stamp(ty - g.length, tx - Math.floor(g[0].length / 2), g)
+    }
+    const L: [number, number] = [CX - 1, 12], R: [number, number] = [CX, 13] // 줄기에서 가지가 갈라지는 자리
+    const top = (g: string[], up = false): void => {
+        l.line(CX - 1, 12, CX - 1, up ? 9 : 5).line(CX, 12, CX, up ? 9 : 5)
+        l.stamp(up ? 9 - g.length : 0, CX - Math.floor(g[0].length / 2), g)
+    }
+    const fruit5 = FRUIT5, fruit4 = FRUIT4
+
+    switch (kind) {
+        case 'daisy': // 붉은 열매 송이
+            top(fruit5)
+            hang(...L, 5, 6, fruit5)
+            hang(...R, 17, 7, fruit5)
+            hang(...L, 3, 11, fruit4)
+            hang(...R, 19, 12, fruit4)
+            break
+        case 'cherry': // 쌍둥이 체리 두 쌍과 가운데 한 쌍
+            for (const [tx, ty, dx] of [[CX - 1, 1, 3], [5, 6, 3], [17, 7, 3]] as const) {
+                l.line(tx < CX ? CX - 1 : CX, 12, tx, ty)
+                l.line(tx, ty, tx - dx, ty + 2).line(tx, ty, tx + dx, ty + 1)
+                l.stamp(ty + 2, tx - dx - 2, fruit5).stamp(ty + 1, tx + dx - 2, fruit5)
+            }
+            break
+        case 'rose': // 장미 열매(로즈힙)
+            top(HIP)
+            hang(...L, 5, 5, HIP)
+            hang(...R, 17, 6, HIP)
+            break
+        case 'poppy': // 양귀비 씨앗 주머니
+            top(POD)
+            hang(...L, 5, 6, POD)
+            hang(...R, 17, 7, POD)
+            break
+        case 'sunflower': { // 무겁게 고개 숙인 씨앗 머리 + 옆의 작은 머리
+            const head = seedHead(15, 11)
+            l.line(CX - 1, 12, CX - 1, 7).line(CX, 12, CX, 7)
+            l.stamp(0, CX - 7, head)
+            hang(...L, 4, 8, seedHead(8, 6))
+            break
+        }
+        case 'tulip': // 위로 선 씨앗 주머니
+            stand(CX - 1, 12, CX - 1, 9, TULIP_POD)
+            stand(...L, 5, 10, TULIP_POD)
+            stand(...R, 17, 9, TULIP_POD)
+            l.line(CX, 12, CX, 9)
+            break
+        case 'bell': // 풍선 모양 열매
+            top(CAPSULE)
+            hang(...L, 5, 6, CAPSULE)
+            hang(...R, 17, 7, CAPSULE)
+            break
+        case 'spike': { // 시든 이삭
+            const sp = dry(spike(5, 9))
+            stand(CX - 1, 12, CX - 1, 9, sp)
+            stand(...L, 5, 10, sp)
+            stand(...R, 17, 9, sp)
+            l.line(CX, 12, CX, 9)
+            break
+        }
+        case 'cosmos': // 솜털 씨앗
+            top(PUFF)
+            hang(...L, 5, 6, PUFF)
+            hang(...R, 17, 7, PUFF)
+            break
+        case 'ball': { // 포도송이처럼 작은 열매가 뭉친다
+            const bunch = (cx: number, top: number, pts: [number, number][]): void => {
+                for (const [dx, dy] of pts) l.stamp(top + dy, cx + dx - 2, fruit4)
+            }
+            l.line(CX - 1, 12, CX - 1, 5).line(CX, 12, CX, 5)
+            bunch(CX - 1, 0, [[-3, 0], [3, 0], [0, 3], [-3, 4], [3, 4], [0, 7]])
+            l.line(...L, 4, 9)
+            bunch(4, 10, [[-2, 0], [2, 0], [0, 3]])
+            l.line(...R, 18, 10)
+            bunch(18, 11, [[-2, 0], [2, 0], [0, 3]])
+            break
+        }
+        default:
+            break
+    }
+}
 
 // 큰 나무 수관: 가장자리가 구불구불한 타원, 왼쪽 위 밝고 오른쪽 아래 어둡다. 곳곳에 꽃(f)과 열매(r).
 function canopy(): string[] {
@@ -252,9 +368,16 @@ function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; 
     }
 
     switch (stage) {
-        case 'seed':
-            c.set(G, W - 1, 'b')
+        case 'seed': {
+            ;[2, 3.5, 4.5, 5].forEach((hw, i) => {
+                const y = G - 3 + i
+                for (let x = 0; x < SRC; x++) {
+                    if (Math.abs(x + 0.5 - CX) <= hw) l.put(y, x, x + 0.5 < CX - hw + 2.2 && i < 3 ? 'n' : 'm')
+                }
+            })
+            l.stamp(G - 6, CX - 3, SEED)
             break
+        }
         case 'tiny':
             c.stem(G - 3).leaf(G - 3, 3)
             break
@@ -287,10 +410,7 @@ function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; 
         }
         case 'fruit': {
             body(8)
-            // 꽃이 진 자리에 열매가 열린다: 위쪽 세 개, 양옆 가지 끝에 두 개씩
-            l.line(CX - 1, 12, 7, 5).line(CX, 12, 14, 4).line(CX - 1, 13, 4, 11).line(CX, 13, 18, 11)
-            l.stamp(1, 4, FRUIT5).stamp(0, 12, FRUIT5).stamp(5, 8, FRUIT5)
-            l.stamp(9, 1, FRUIT4).stamp(11, 5, FRUIT4).stamp(9, 17, FRUIT4).stamp(12, 15, FRUIT4)
+            fruitLayer(kind, l) // 꽃이 진 자리에 종마다 다른 열매가 열린다
             break
         }
         case 'tree':
@@ -302,7 +422,7 @@ function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; 
 }
 
 const COMMON_COLORS = {
-    b: '#c98a4b', m: '#5a3b22', P: '#e0916a', p: '#bf6a45', q: '#8f4a2f', o: '#2a1c12', k: '#6b4a2b'
+    b: '#c98a4b', B: '#ecc088', n: '#7a5233', m: '#5a3b22', P: '#e0916a', p: '#bf6a45', q: '#8f4a2f', o: '#2a1c12', k: '#6b4a2b'
 }
 
 // 색 섞기: hex 색을 target 색 쪽으로 t만큼 옮긴다
