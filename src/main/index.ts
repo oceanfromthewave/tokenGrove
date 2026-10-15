@@ -387,6 +387,7 @@ ipcMain.handle('pet:addTestXp', () => {
     return getState()
 })
 ipcMain.on('garden:open', openGarden)
+ipcMain.handle('app:version', () => app.getVersion())
 
 // 펫/도감/통계/설정을 파일로 내보내고 불러온다. 파일 위치는 사용자가 저장/열기 창에서 직접 고른다.
 // 불러오기는 현재 PC의 로그 읽은 위치와 처리한 기록은 그대로 두기 때문에 같은 사용 기록이 다시 경험치가 되지 않는다.

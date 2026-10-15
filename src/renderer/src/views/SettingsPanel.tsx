@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {tr} from '../../../shared/i18n'
 import {GOALS, SPEED_NAME, type Speed} from '../../../shared/settings'
 import {useSettings} from '../usePet'
@@ -9,6 +9,8 @@ const SPEEDS: Speed[] = ['slow', 'normal', 'fast']
 function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): React.JSX.Element {
     const [settings, update] = useSettings()
     const [note, setNote] = useState('')
+    const [version, setVersion] = useState('')
+    useEffect(() => void window.api.appVersion().then(setVersion), [])
     const [resetNote, setResetNote] = useState('')
     const reset = async (): Promise<void> => {
         const result = await window.api.resetData()
@@ -112,6 +114,7 @@ function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): R
                     ))}
                 </div>
             </div>
+            {version && <small className="app-version">Token Grove v{version}</small>}
         </div>
     )
 }

@@ -35,6 +35,7 @@ const api = {
     exportData: (): Promise<'saved' | 'canceled' | 'error'> => ipcRenderer.invoke('data:export'),
     importData: (): Promise<'loaded' | 'canceled' | 'error'> => ipcRenderer.invoke('data:import'),
     resetData: (): Promise<'reset' | 'canceled' | 'error'> => ipcRenderer.invoke('data:reset'),
+    appVersion: (): Promise<string> => ipcRenderer.invoke('app:version'),
     dragStart: (): void => ipcRenderer.send('pet:dragStart'),
     dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),
     dragEnd: (): void => ipcRenderer.send('pet:dragEnd'),

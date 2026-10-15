@@ -1197,3 +1197,10 @@ body,
   text-align: left;
   opacity: 0.85;
 }
+
+.app-version {
+  display: block;
+  margin-top: 10px;
+  text-align: right;
+  opacity: 0.6;
+}
