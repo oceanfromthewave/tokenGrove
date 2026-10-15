@@ -1,24 +1,25 @@
 // 성장 규칙은 이 파일에서만 관리한다. (UI에 계산식을 두지 않기)
+import {tr} from './i18n.ts'
 
 // 식물 종. 새 씨앗이 시작될 때 무작위로 정해진다.
 export const SPECIES = [
-    {id: 'daisy', name: '데이지', rarity: 'common'},
-    {id: 'sunflower', name: '해바라기', rarity: 'uncommon'},
-    {id: 'tulip', name: '튤립', rarity: 'common'},
-    {id: 'bellflower', name: '도라지', rarity: 'common'},
-    {id: 'rose', name: '장미', rarity: 'rare'},
-    {id: 'lavender', name: '라벤더', rarity: 'uncommon'},
-    {id: 'hydrangea', name: '수국', rarity: 'uncommon'},
-    {id: 'poppy', name: '양귀비', rarity: 'uncommon'},
-    {id: 'cosmos', name: '코스모스', rarity: 'common'},
-    {id: 'cherry', name: '벚꽃', rarity: 'rare'}
+    {id: 'daisy', get name() { return tr('데이지') }, rarity: 'common'},
+    {id: 'sunflower', get name() { return tr('해바라기') }, rarity: 'uncommon'},
+    {id: 'tulip', get name() { return tr('튤립') }, rarity: 'common'},
+    {id: 'bellflower', get name() { return tr('도라지') }, rarity: 'common'},
+    {id: 'rose', get name() { return tr('장미') }, rarity: 'rare'},
+    {id: 'lavender', get name() { return tr('라벤더') }, rarity: 'uncommon'},
+    {id: 'hydrangea', get name() { return tr('수국') }, rarity: 'uncommon'},
+    {id: 'poppy', get name() { return tr('양귀비') }, rarity: 'uncommon'},
+    {id: 'cosmos', get name() { return tr('코스모스') }, rarity: 'common'},
+    {id: 'cherry', get name() { return tr('벚꽃') }, rarity: 'rare'}
 ] as const
 
 // 희귀도: 새 씨앗이 이 종일 확률의 가중치. (흔함 4종 40 + 드묾 4종 24 + 희귀 2종 6 = 70 -> 희귀 종 하나당 약 4.3%)
 export const RARITY = {
-    common: {name: '흔함', weight: 10},
-    uncommon: {name: '드묾', weight: 6},
-    rare: {name: '희귀', weight: 3}
+    common: {get name() { return tr('흔함') }, weight: 10},
+    uncommon: {get name() { return tr('드묾') }, weight: 6},
+    rare: {get name() { return tr('희귀') }, weight: 3}
 } as const
 
 export type Rarity = keyof typeof RARITY
@@ -108,16 +109,16 @@ export function addXp(state: PetState, amount: number): PetState {
 
 // 성장 단계. 레벨이 minLevel 이상이면 해당 단계. minLevel 오름차순으로 유지할 것.
 export const STAGES = [
-    {id: 'seed', name: '씨앗', minLevel: 1},
-    {id: 'tiny', name: '싹', minLevel: 2},
-    {id: 'sprout', name: '새싹', minLevel: 3},
-    {id: 'young', name: '어린 잎', minLevel: 4},
-    {id: 'leafy', name: '무성한 잎', minLevel: 5},
-    {id: 'bud', name: '꽃봉오리', minLevel: 6},
-    {id: 'bloom', name: '첫 꽃', minLevel: 7},
-    {id: 'full', name: '만개', minLevel: 8},
-    {id: 'fruit', name: '열매', minLevel: 9},
-    {id: 'tree', name: '큰 나무', minLevel: 10}
+    {id: 'seed', get name() { return tr('씨앗') }, minLevel: 1},
+    {id: 'tiny', get name() { return tr('싹') }, minLevel: 2},
+    {id: 'sprout', get name() { return tr('새싹') }, minLevel: 3},
+    {id: 'young', get name() { return tr('어린 잎') }, minLevel: 4},
+    {id: 'leafy', get name() { return tr('무성한 잎') }, minLevel: 5},
+    {id: 'bud', get name() { return tr('꽃봉오리') }, minLevel: 6},
+    {id: 'bloom', get name() { return tr('첫 꽃') }, minLevel: 7},
+    {id: 'full', get name() { return tr('만개') }, minLevel: 8},
+    {id: 'fruit', get name() { return tr('열매') }, minLevel: 9},
+    {id: 'tree', get name() { return tr('큰 나무') }, minLevel: 10}
 ] as const
 
 export const isStageId = (v: unknown): v is StageId => STAGES.some((s) => s.id === v)

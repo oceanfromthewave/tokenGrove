@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
+import {tr} from '../../../shared/i18n'
 import PixelArt from '../components/PixelArt'
 import {formatXp, hasGoldPot, stageOf, xpToNextLevel} from '../../../shared/growth'
 import {onboardingLines, pickChatter} from '../../../shared/chatter'
@@ -132,7 +133,7 @@ function PetView(): React.JSX.Element {
                 ))}
                 {big && (
                     <div key={`b${burst.id}`} className="banner">
-                        {burst.kind === 'goal' ? '오늘 목표 달성!' : burst.kind === 'newSeed' ? '새 씨앗!' : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
+                        {burst.kind === 'goal' ? tr('오늘 목표 달성!') : burst.kind === 'newSeed' ? tr('새 씨앗!') : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
                     </div>
                 )}
                 {chat && (
@@ -160,11 +161,11 @@ function PetView(): React.JSX.Element {
                 <div className="xptext">{formatXp(pet.xp)} / {xpToNextLevel(pet.level)} XP</div>
             </div>
             <div className="row">
-                <button className="pbtn" title="경험치 테스트 (+30 XP)" onClick={() => window.api.addTestXp()}>
+                <button className="pbtn" title={tr('경험치 테스트 (+30 XP)')} onClick={() => window.api.addTestXp()}>
                     <PixelArt rows={SPARKLE} colors={ICON_COLORS} scale={2}/>XP
                 </button>
-                <button className="pbtn" title="정원 열기" onClick={() => window.api.openGarden()}>
-                    <PixelArt rows={SPROUT} colors={ICON_COLORS} scale={2}/>정원
+                <button className="pbtn" title={tr('정원 열기')} onClick={() => window.api.openGarden()}>
+                    <PixelArt rows={SPROUT} colors={ICON_COLORS} scale={2}/>{tr('정원')}
                 </button>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import type {Completed, PetState} from './growth.ts'
 import {SPECIES} from './growth.ts'
 import type {Stats} from './stats.ts'
+import {tr} from './i18n.ts'
 
 export interface Achievement {
     id: string
@@ -9,16 +10,16 @@ export interface Achievement {
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
-    {id: 'first', name: '첫 열매', desc: '식물을 처음 완성했어요'},
-    {id: 'five', name: '정원사', desc: '서로 다른 5종을 완성했어요'},
-    {id: 'all', name: '식물 박사', desc: '모든 종을 완성했어요'},
-    {id: 'tree', name: '큰 나무', desc: '식물을 큰 나무 단계까지 키웠어요'},
-    {id: 'xp1k', name: '새싹 토큰러', desc: '누적 1,000 XP'},
-    {id: 'xp10k', name: '숲의 주민', desc: '누적 10,000 XP'},
-    {id: 'xp100k', name: '숲의 주인', desc: '누적 100,000 XP'},
-    {id: 'streak3', name: '사흘 연속', desc: '3일 연속 사용'},
-    {id: 'streak7', name: '일주일 연속', desc: '7일 연속 사용'},
-    {id: 'streak30', name: '한 달 연속', desc: '30일 연속 사용'}
+    {id: 'first', get name() { return tr('첫 열매') }, get desc() { return tr('식물을 처음 완성했어요') }},
+    {id: 'five', get name() { return tr('정원사') }, get desc() { return tr('서로 다른 5종을 완성했어요') }},
+    {id: 'all', get name() { return tr('식물 박사') }, get desc() { return tr('모든 종을 완성했어요') }},
+    {id: 'tree', get name() { return tr('큰 나무') }, get desc() { return tr('식물을 큰 나무 단계까지 키웠어요') }},
+    {id: 'xp1k', get name() { return tr('새싹 토큰러') }, get desc() { return tr('누적 1,000 XP') }},
+    {id: 'xp10k', get name() { return tr('숲의 주민') }, get desc() { return tr('누적 10,000 XP') }},
+    {id: 'xp100k', get name() { return tr('숲의 주인') }, get desc() { return tr('누적 100,000 XP') }},
+    {id: 'streak3', get name() { return tr('사흘 연속') }, get desc() { return tr('3일 연속 사용') }},
+    {id: 'streak7', get name() { return tr('일주일 연속') }, get desc() { return tr('7일 연속 사용') }},
+    {id: 'streak30', get name() { return tr('한 달 연속') }, get desc() { return tr('30일 연속 사용') }}
 ]
 
 // 달성한 업적 id 집합. 따로 저장하지 않고 저장된 데이터에서 매번 계산한다.

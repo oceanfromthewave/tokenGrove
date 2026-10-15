@@ -4,6 +4,7 @@ import {join} from 'path'
 import {fallbackPos, fitsInAny} from '../shared/windowPos'
 import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
+import {resolveLang, setLang, tr} from '../shared/i18n'
 import {parseRect} from '../shared/exportRect'
 import {MAX_IMPORT_BYTES, buildExport, parseImport} from '../shared/exportData'
 import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '../shared/settings'
@@ -81,7 +82,7 @@ async function checkForUpdate(manual: boolean): Promise<void> {
         if (!latest) throw new Error('응답 형식이 올바르지 않음')
 
         if (!isNewer(latest.version, current)) {
-            if (manual) await dialog.showMessageBox({type: 'info', title: 'Token Grove', message: '최신 버전을 쓰고 있어요', detail: `현재 v${current}`})
+            if (manual) await dialog.showMessageBox({type: 'info', title: 'Token Grove', message: tr('최신 버전을 쓰고 있어요'), detail: tr('현재 v{current}', {current})})
             return
         }
         // 자동 확인은 건너뛴 버전과 이미 물어본 버전은 다시 묻지 않는다. 직접 확인(manual)은 항상 보여준다.
@@ -90,10 +91,10 @@ async function checkForUpdate(manual: boolean): Promise<void> {
 
         const {response} = await dialog.showMessageBox({
             type: 'info',
-            title: '새 버전이 있어요',
-            message: `새 버전 v${latest.version}이 나왔어요. 업데이트 하시겠어요?`,
-            detail: `현재 v${current}\n\n업데이트를 누르면 다운로드 페이지가 열려요. 설치 파일을 받아 실행하면 저장된 펫과 도감은 그대로 유지돼요.`,
-            buttons: ['업데이트 (다운로드 페이지 열기)', '나중에', '이 버전 건너뛰기'],
+            title: tr('새 버전이 있어요'),
+            message: tr('새 버전 v{version}이 나왔어요. 업데이트 하시겠어요?', {version: latest.version}),
+            detail: tr('현재 v{current}\n\n업데이트를 누르면 다운로드 페이지가 열려요. 설치 파일을 받아 실행하면 저장된 펫과 도감은 그대로 유지돼요.', {current}),
+            buttons: [tr('업데이트 (다운로드 페이지 열기)'), tr('나중에'), tr('이 버전 건너뛰기')],
             defaultId: 0,
             cancelId: 1
         })
@@ -104,7 +105,7 @@ async function checkForUpdate(manual: boolean): Promise<void> {
         }
     } catch (err) {
         console.error('업데이트 확인 실패:', err instanceof Error ? err.message : err)
-        if (manual) await dialog.showMessageBox({type: 'warning', title: 'Token Grove', message: '업데이트를 확인하지 못했어요', detail: '인터넷 연결을 확인하고 잠시 뒤에 다시 시도해 주세요.'})
+        if (manual) await dialog.showMessageBox({type: 'warning', title: 'Token Grove', message: tr('업데이트를 확인하지 못했어요'), detail: tr('인터넷 연결을 확인하고 잠시 뒤에 다시 시도해 주세요.')})
     }
 }
 
@@ -112,19 +113,19 @@ async function checkForUpdate(manual: boolean): Promise<void> {
 function showPetMenu(win: BrowserWindow): void {
     const login = app.getLoginItemSettings().openAtLogin
     Menu.buildFromTemplate([
-        {label: '정원 열기', click: openGarden},
-        {label: '숨기기 (트레이에서 다시 열기)', click: () => win.hide()},
-        {label: '업데이트 확인', click: () => void checkForUpdate(true)},
+        {label: tr('정원 열기'), click: openGarden},
+        {label: tr('숨기기 (트레이에서 다시 열기)'), click: () => win.hide()},
+        {label: tr('업데이트 확인'), click: () => void checkForUpdate(true)},
         {type: 'separator'},
         {
-            label: 'Windows 시작 시 자동 실행',
+            label: tr('Windows 시작 시 자동 실행'),
             type: 'checkbox',
             checked: login,
             enabled: app.isPackaged, // 개발 모드(npm run dev)에서는 등록하지 않는다
             click: (item) => app.setLoginItemSettings({openAtLogin: item.checked})
         },
         {type: 'separator'},
-        {label: '종료', click: () => app.quit()}
+        {label: tr('종료'), click: () => app.quit()}
     ]).popup({window: win})
 }
 
@@ -143,11 +144,11 @@ function createTray(): void {
     tray.setToolTip('Token Grove')
     const menu = (): Menu =>
         Menu.buildFromTemplate([
-            {label: petWin?.isVisible() ? '펫 숨기기' : '펫 보이기', click: togglePet},
-            {label: '정원 열기', click: openGarden},
-            {label: '업데이트 확인', click: () => void checkForUpdate(true)},
+            {label: petWin?.isVisible() ? tr('펫 숨기기') : tr('펫 보이기'), click: togglePet},
+            {label: tr('정원 열기'), click: openGarden},
+            {label: tr('업데이트 확인'), click: () => void checkForUpdate(true)},
             {type: 'separator'},
-            {label: '종료', click: () => app.quit()}
+            {label: tr('종료'), click: () => app.quit()}
         ])
     tray.on('click', togglePet)
     tray.on('right-click', () => tray?.popUpContextMenu(menu()))
@@ -188,7 +189,7 @@ function openGarden(): void {
     gardenWin = new BrowserWindow({
         width: 460,
         height: 720,
-        title: 'Token Grove 정원',
+        title: tr('Token Grove 정원'),
         autoHideMenuBar: true,
         webPreferences: {
             preload: join(__dirname, '../preload/index.js')
@@ -241,6 +242,7 @@ ipcMain.handle('onboarding:done', () => {
 ipcMain.handle('settings:get', () => settings)
 ipcMain.handle('settings:set', (_e, patch: unknown) => {
     settings = mergeSettings(settings, patch) // 알려진 항목과 형식만 받아들인다
+    setLang(resolveLang(settings.language, app.getLocale()))
     persist()
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
     return settings
@@ -252,9 +254,9 @@ function notifyGrowth(before: PetState): void {
     if (!settings.notifications || (kind !== 'stage' && kind !== 'newSeed') || !Notification.isSupported()) return
     const name = (id: string): string => SPECIES.find((s) => s.id === id)?.name ?? ''
     if (kind === 'stage') {
-        new Notification({title: `${stageOf(pet.level).name} 단계가 됐어요`, body: `${name(pet.species)}이(가) 쑥쑥 자라고 있어요`}).show()
+        new Notification({title: tr('{stage} 단계가 됐어요', {stage: stageOf(pet.level).name}), body: tr('{name}이(가) 쑥쑥 자라고 있어요', {name: name(pet.species)})}).show()
     } else {
-        new Notification({title: '식물을 완성했어요!', body: `${name(before.species)}이(가) 정원 도감에 심어졌고, 새 씨앗이 시작됐어요`}).show()
+        new Notification({title: tr('식물을 완성했어요!'), body: tr('{name}이(가) 정원 도감에 심어졌고, 새 씨앗이 시작됐어요', {name: name(before.species)})}).show()
     }
 }
 
@@ -290,7 +292,7 @@ function pollLogs(): void {
     } catch (err) {
         // 내용은 담지 않고 짧은 설명만 보여준다 (프롬프트 등이 섞여 나오지 않게)
         console.error('로그 읽기 실패:', err instanceof Error ? err.message : err)
-        status = {...status, lastCheckedAt: Date.now(), error: '로그를 읽는 중 문제가 생겼어요. 다음 확인 때 다시 시도해요.'}
+        status = {...status, lastCheckedAt: Date.now(), error: tr('로그를 읽는 중 문제가 생겼어요. 다음 확인 때 다시 시도해요.')}
         for (const w of BrowserWindow.getAllWindows()) w.webContents.send('status:changed', status)
     }
 }
@@ -343,7 +345,7 @@ ipcMain.handle('data:export', async (e): Promise<DataResult> => {
     if (!win || win !== gardenWin) return 'error'
     try {
         const {canceled, filePath} = await dialog.showSaveDialog(win, {
-            title: '데이터 내보내기',
+            title: tr('데이터 내보내기'),
             defaultPath: join(app.getPath('documents'), `TokenGrove-backup-${dateKey(new Date())}.json`),
             filters: [{name: 'JSON', extensions: ['json']}]
         })
@@ -361,17 +363,17 @@ ipcMain.handle('data:import', async (e): Promise<DataResult> => {
     const win = BrowserWindow.fromWebContents(e.sender)
     if (!win || win !== gardenWin) return 'error'
     try {
-        const {canceled, filePaths} = await dialog.showOpenDialog(win, {title: '데이터 불러오기', properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json']}]})
+        const {canceled, filePaths} = await dialog.showOpenDialog(win, {title: tr('데이터 불러오기'), properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json']}]})
         if (canceled || !filePaths[0]) return 'canceled'
         if ((await stat(filePaths[0])).size > MAX_IMPORT_BYTES) return 'error'
         const data = parseImport(await readFile(filePaths[0], 'utf8'))
         if (!data) return 'error'
         const {response} = await dialog.showMessageBox(win, {
             type: 'warning',
-            title: '데이터 불러오기',
-            message: '현재 데이터를 불러온 데이터로 바꿀까요?',
-            detail: '지금 키우는 식물, 도감, 통계, 설정이 모두 바뀌어요. 되돌릴 수 없으니 필요하면 먼저 내보내기를 해 두세요.',
-            buttons: ['바꾸기', '취소'],
+            title: tr('데이터 불러오기'),
+            message: tr('현재 데이터를 불러온 데이터로 바꿀까요?'),
+            detail: tr('지금 키우는 식물, 도감, 통계, 설정이 모두 바뀌어요. 되돌릴 수 없으니 필요하면 먼저 내보내기를 해 두세요.'),
+            buttons: [tr('바꾸기'), tr('취소')],
             defaultId: 1,
             cancelId: 1
         })
@@ -400,9 +402,9 @@ ipcMain.handle('garden:export', async (e, rectInput: unknown): Promise<'saved' |
     try {
         const image = await win.webContents.capturePage(rect)
         const {canceled, filePath} = await dialog.showSaveDialog(win, {
-            title: '정원 사진 저장',
+            title: tr('정원 사진 저장'),
             defaultPath: join(app.getPath('pictures'), `TokenGrove-${dateKey(new Date())}.png`),
-            filters: [{name: 'PNG 이미지', extensions: ['png']}]
+            filters: [{name: tr('PNG 이미지'), extensions: ['png']}]
         })
         if (canceled || !filePath) return 'canceled'
         await writeFile(filePath.toLowerCase().endsWith('.png') ? filePath : filePath + '.png', image.toPNG())
@@ -444,6 +446,7 @@ app.whenReady().then(() => {
     collection = save.collection
     stats = save.stats
     settings = save.settings
+    setLang(resolveLang(settings.language, app.getLocale()))
     skippedVersion = save.skippedVersion
     onboarded = save.onboarded
     processed = save.processed

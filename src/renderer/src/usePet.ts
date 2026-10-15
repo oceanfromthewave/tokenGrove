@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react'
+import {resolveLang, setLang} from '../../shared/i18n'
 import {INITIAL_PET} from '../../shared/growth'
 import {EMPTY_STATS} from '../../shared/stats'
 import type {AppState} from '../../preload/index'
@@ -37,5 +38,6 @@ export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
         window.api.getSettings().then(setSettings)
         return window.api.onSettingsChanged(setSettings)
     }, [])
+    setLang(resolveLang(settings.language, navigator.language)) // 설정이 바뀌면 이 훅을 쓰는 화면이 다시 그려지면서 언어가 바뀐다
     return [settings, (patch) => void window.api.setSettings(patch)]
 }

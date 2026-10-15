@@ -1,4 +1,6 @@
 // 사용자 설정. 저장 파일에서 읽을 때도, 화면(IPC)에서 바꿀 때도 항상 이 모듈로 검증한다.
+import type {LangSetting} from './i18n.ts'
+import {tr} from './i18n.ts'
 export type Speed = 'slow' | 'normal' | 'fast'
 
 export interface Settings {
@@ -8,16 +10,17 @@ export interface Settings {
     updateCheck: boolean // 새 버전이 있는지 GitHub에 물어보기
     speed: Speed // 성장 속도 (경험치 환산 배율)
     dailyGoal: number // 하루 목표 경험치 (0 = 끔)
+    language: LangSetting // 화면 언어 (auto = 시스템 언어)
 }
 
-export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, updateCheck: true, speed: 'normal', dailyGoal: 100}
+export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, updateCheck: true, speed: 'normal', dailyGoal: 100, language: 'auto'}
 
 // 경험치 환산 배율. 사용량이 적은 사람은 빠르게, 많은 사람은 느리게 고를 수 있다.
 export const SPEED_MULTIPLIER: Record<Speed, number> = {slow: 0.5, normal: 1, fast: 2}
 
 export const GOALS = [0, 50, 100, 200, 500] as const // 고를 수 있는 하루 목표
 
-export const SPEED_NAME: Record<Speed, string> = {slow: '느리게', normal: '보통', fast: '빠르게'}
+export const SPEED_NAME: Record<Speed, string> = {get slow() { return tr('느리게') }, get normal() { return tr('보통') }, get fast() { return tr('빠르게') }}
 
 const isSpeed = (v: unknown): v is Speed => v === 'slow' || v === 'normal' || v === 'fast'
 
@@ -32,6 +35,7 @@ export function mergeSettings(current: Settings, patch: unknown): Settings {
         notifications: typeof own('notifications') === 'boolean' ? (own('notifications') as boolean) : current.notifications,
         updateCheck: typeof own('updateCheck') === 'boolean' ? (own('updateCheck') as boolean) : current.updateCheck,
         speed: isSpeed(own('speed')) ? (own('speed') as Speed) : current.speed,
+        language: ['auto', 'ko', 'en'].includes(own('language') as string) ? (own('language') as LangSetting) : current.language,
         dailyGoal: (GOALS as readonly unknown[]).includes(own('dailyGoal')) ? (own('dailyGoal') as number) : current.dailyGoal
     }
 }

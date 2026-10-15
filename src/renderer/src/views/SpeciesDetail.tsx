@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
+import {tr} from '../../../shared/i18n'
 import {SPECIES, STAGES, type Completed, type SpeciesId} from '../../../shared/growth'
 
 // 도감에서 고른 종의 상세. 슬라이더로 씨앗부터 큰 나무까지 성장 과정을 넘겨볼 수 있다.
@@ -24,12 +25,12 @@ function SpeciesDetail({species, count, lastAt, plants}: {
                 max={STAGES.length - 1}
                 value={step}
                 onChange={(e) => setStep(Number(e.target.value))}
-                aria-label="성장 단계"
+                aria-label={tr('성장 단계')}
             />
             <div className="detail-meta">
-                {count}번 완성 · 마지막 {new Date(lastAt).toLocaleDateString()}
+                {tr('{count}번 완성 · 마지막 {date}', {count, date: new Date(lastAt).toLocaleDateString()})}
             </div>
-            <h3>완성한 식물 기록</h3>
+            <h3>{tr('완성한 식물 기록')}</h3>
             <div className="plant-records">
                 {[...plants].reverse().map((plant, i) => (
                     <details key={`${plant.completedAt}-${i}`}>
@@ -41,12 +42,12 @@ function SpeciesDetail({species, count, lastAt, plants}: {
                                     return (
                                         <li key={`${mark.at}-${mark.stage}-${j}`}>
                                             <b>{reached?.name ?? mark.stage}</b>
-                                            <time>{mark.kind === 'start' ? '기록 시작 · ' : ''}{new Date(mark.at).toLocaleString()}</time>
+                                            <time>{mark.kind === 'start' ? tr('기록 시작 · ') : ''}{new Date(mark.at).toLocaleString()}</time>
                                         </li>
                                     )
                                 })}
                             </ol>
-                        ) : <small>이 식물의 성장 기록은 없어요.</small>}
+                        ) : <small>{tr('이 식물의 성장 기록은 없어요.')}</small>}
                     </details>
                 ))}
             </div>

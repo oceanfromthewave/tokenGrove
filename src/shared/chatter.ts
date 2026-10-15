@@ -1,4 +1,5 @@
 import {SPECIES, formatXp, stageOf, type PetState, type SpeciesId} from './growth.ts'
+import {tr} from './i18n.ts'
 
 // 펫을 클릭했을 때 하는 말. 지금 상태(단계, 종, 오늘 사용량, 연속 사용일, 시간대, 요일)에 맞는 말 중에서 고른다.
 export interface ChatterContext {
@@ -46,33 +47,33 @@ const WEEKDAY_LINE: Record<number, string> = {
 
 export function chatterLines(ctx: ChatterContext): string[] {
     const stage = stageOf(ctx.pet.level)
-    const lines = [...(BY_STAGE[stage.id] ?? ['안녕하세요!'])]
+    const lines = [...(BY_STAGE[stage.id] ?? ['안녕하세요!']).map((l) => tr(l))]
 
     // 오늘 사용량
-    if (ctx.todayXp <= 0) lines.push('오늘은 아직 조용하네요', '오늘도 함께 힘내 봐요')
-    else if (ctx.todayXp >= 100) lines.push(`오늘 ${formatXp(ctx.todayXp)} XP나 모았어요, 대단해요!`, '오늘 정말 열심히 하고 있네요')
-    else lines.push(`오늘 ${formatXp(ctx.todayXp)} XP를 모았어요`)
+    if (ctx.todayXp <= 0) lines.push(tr('오늘은 아직 조용하네요'), tr('오늘도 함께 힘내 봐요'))
+    else if (ctx.todayXp >= 100) lines.push(tr('오늘 {xp} XP나 모았어요, 대단해요!', {xp: formatXp(ctx.todayXp)}), tr('오늘 정말 열심히 하고 있네요'))
+    else lines.push(tr('오늘 {xp} XP를 모았어요', {xp: formatXp(ctx.todayXp)}))
 
     // 연속 사용일
-    if (ctx.streak >= 30) lines.push(`${ctx.streak}일째 함께예요. 벌써 한 달이 넘었어요!`)
-    else if (ctx.streak >= 7) lines.push(`${ctx.streak}일 연속이에요, 일주일이 넘었어요!`)
-    else if (ctx.streak >= 2) lines.push(`${ctx.streak}일 연속이에요!`)
+    if (ctx.streak >= 30) lines.push(tr('{n}일째 함께예요. 벌써 한 달이 넘었어요!', {n: ctx.streak}))
+    else if (ctx.streak >= 7) lines.push(tr('{n}일 연속이에요, 일주일이 넘었어요!', {n: ctx.streak}))
+    else if (ctx.streak >= 2) lines.push(tr('{n}일 연속이에요!', {n: ctx.streak}))
 
     // 시간대
-    if (ctx.hour >= 22 || ctx.hour < 5) lines.push('늦었어요, 쉬엄쉬엄 해요', '별이 떴어요. 오늘도 수고했어요')
-    else if (ctx.hour < 10) lines.push('좋은 아침이에요', '아침 햇살이 좋네요')
-    else if (ctx.hour >= 12 && ctx.hour < 14) lines.push('점심은 드셨어요?')
-    else if (ctx.hour >= 18 && ctx.hour < 22) lines.push('저녁 노을이 예뻐요', '오늘 하루도 고생했어요')
+    if (ctx.hour >= 22 || ctx.hour < 5) lines.push(tr('늦었어요, 쉬엄쉬엄 해요'), tr('별이 떴어요. 오늘도 수고했어요'))
+    else if (ctx.hour < 10) lines.push(tr('좋은 아침이에요'), tr('아침 햇살이 좋네요'))
+    else if (ctx.hour >= 12 && ctx.hour < 14) lines.push(tr('점심은 드셨어요?'))
+    else if (ctx.hour >= 18 && ctx.hour < 22) lines.push(tr('저녁 노을이 예뻐요'), tr('오늘 하루도 고생했어요'))
 
     // 요일, 종 (조건에 맞을 때만)
-    if (ctx.weekday !== undefined && WEEKDAY_LINE[ctx.weekday]) lines.push(WEEKDAY_LINE[ctx.weekday])
-    if (ctx.pet.level >= 7 && SPECIES.some((s) => s.id === ctx.pet.species)) lines.push(BY_SPECIES[ctx.pet.species])
+    if (ctx.weekday !== undefined && WEEKDAY_LINE[ctx.weekday]) lines.push(tr(WEEKDAY_LINE[ctx.weekday]))
+    if (ctx.pet.level >= 7 && SPECIES.some((s) => s.id === ctx.pet.species)) lines.push(tr(BY_SPECIES[ctx.pet.species]))
 
     // 이름을 붙여 줬다면 이름을 부른다
-    if (ctx.pet.name) lines.push(`저를 "${ctx.pet.name}"(이)라고 불러 줘서 고마워요`, `${ctx.pet.name}, 오늘도 잘 자라고 있어요`)
+    if (ctx.pet.name) lines.push(tr('저를 "{name}"(이)라고 불러 줘서 고마워요', {name: ctx.pet.name}), tr('{name}, 오늘도 잘 자라고 있어요', {name: ctx.pet.name}))
 
     // 아무 때나 해도 어울리는 말
-    lines.push('쓰다듬어 줘서 고마워요', '물은 충분해요!')
+    lines.push(tr('쓰다듬어 줘서 고마워요'), tr('물은 충분해요!'))
     return lines
 }
 
@@ -85,11 +86,11 @@ export function pickChatter(ctx: ChatterContext, rand: () => number = Math.rando
 // 첫 실행 때 펫이 차례로 하는 안내. 도구를 하나도 못 찾았으면 마지막에 알려 준다.
 export function onboardingLines(tools: { claude: number; codex: number }): string[] {
     const lines = [
-        '안녕하세요! 저는 씨앗이에요',
-        'Claude Code나 Codex를 쓰면 쑥쑥 자라요',
-        '클릭하면 말을 걸 수 있어요. 우클릭은 메뉴예요',
-        '정원 버튼에서 도감과 기록을 볼 수 있어요'
+        tr('안녕하세요! 저는 씨앗이에요'),
+        tr('Claude Code나 Codex를 쓰면 쑥쑥 자라요'),
+        tr('클릭하면 말을 걸 수 있어요. 우클릭은 메뉴예요'),
+        tr('정원 버튼에서 도감과 기록을 볼 수 있어요')
     ]
-    if (tools.claude + tools.codex === 0) lines.push('아직 Claude Code나 Codex 기록을 못 찾았어요. 쓰기 시작하면 자라요!')
+    if (tools.claude + tools.codex === 0) lines.push(tr('아직 Claude Code나 Codex 기록을 못 찾았어요. 쓰기 시작하면 자라요!'))
     return lines
 }

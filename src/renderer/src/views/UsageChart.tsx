@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {tr} from '../../../shared/i18n'
 import {formatXp} from '../../../shared/growth'
 import {recentDays, type Stats} from '../../../shared/stats'
 
@@ -12,10 +13,10 @@ function UsageChart({stats}: { stats: Stats }): React.JSX.Element {
     return (
         <div className="chart">
             <div className="chart-head">
-                <span>최근 {n}일 · 합계 {formatXp(total)} XP</span>
+                <span>{tr('최근 {n}일 · 합계 {total} XP', {n, total: formatXp(total)})}</span>
                 <span className="seg">
                     {([7, 30] as const).map((v) => (
-                        <button key={v} className={n === v ? 'on' : ''} onClick={() => setN(v)}>{v}일</button>
+                        <button key={v} className={n === v ? 'on' : ''} onClick={() => setN(v)}>{tr('{n}일', {n: v})}</button>
                     ))}
                 </span>
             </div>
@@ -28,7 +29,7 @@ function UsageChart({stats}: { stats: Stats }): React.JSX.Element {
             </div>
             <div className="chart-axis">
                 <span>{days[0].key.slice(5)}</span>
-                <span>오늘</span>
+                <span>{tr('오늘')}</span>
             </div>
         </div>
     )

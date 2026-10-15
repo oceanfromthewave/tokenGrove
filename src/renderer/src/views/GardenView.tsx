@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
+import {tr} from '../../../shared/i18n'
 import PixelArt from '../components/PixelArt'
 import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
 import {RARITY, hasGoldPot, SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
@@ -16,7 +17,7 @@ const RAINBOW = rainbowRows()
 const MOON = moonRows()
 
 // 오늘 사용량에 따른 정원 날씨 이름
-const WEATHER_NAME: Record<Weather, string> = {overcast: '흐림', cloudy: '구름 조금', sunny: '맑음', rainbow: '무지개'}
+const weatherName = (w: Weather): string => ({overcast: tr('흐림'), cloudy: tr('구름 조금'), sunny: tr('맑음'), rainbow: tr('무지개')})[w]
 
 // 밤에 날아다니는 반딧불이: [가로 %, 세로 px, 움직임 지연 초]
 const FIREFLIES: [number, number, number][] = [[10, 190, 0], [24, 230, 2], [38, 200, 4], [55, 240, 1], [68, 205, 5], [80, 235, 3], [90, 195, 6]]
@@ -68,15 +69,15 @@ function GardenView(): React.JSX.Element {
         const box = sceneRef.current?.getBoundingClientRect()
         if (!box) return
         const result = await window.api.exportGarden({x: box.x, y: box.y, width: box.width, height: box.height})
-        setToast(result === 'saved' ? '사진을 저장했어요' : result === 'error' ? '저장하지 못했어요' : '')
+        setToast(result === 'saved' ? tr('사진을 저장했어요') : result === 'error' ? tr('저장하지 못했어요') : '')
         if (result !== 'canceled') setTimeout(() => setToast(''), 2500)
     }
     const savePlantName = async (): Promise<void> => {
         try {
             await window.api.setPetName(plantName)
-            setToast('이름을 저장했어요')
+            setToast(tr('이름을 저장했어요'))
         } catch {
-            setToast('이름을 저장하지 못했어요')
+            setToast(tr('이름을 저장하지 못했어요'))
         }
         setTimeout(() => setToast(''), 2500)
     }
@@ -159,18 +160,18 @@ function GardenView(): React.JSX.Element {
                     <div className="garden-heading">
                         <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
                     </div>
-                    <button className="photo-btn" onClick={savePhoto}>사진 저장</button>
+                    <button className="photo-btn" onClick={savePhoto}>{tr('사진 저장')}</button>
                 </div>
                 <div className="plant-name-edit">
                     <input
                         value={plantName}
                         maxLength={24}
-                        placeholder="식물 이름"
-                        aria-label="현재 식물 이름"
+                        placeholder={tr('식물 이름')}
+                        aria-label={tr('현재 식물 이름')}
                         onChange={(e) => setPlantName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') void savePlantName() }}
                     />
-                    <button className="photo-btn" onClick={() => void savePlantName()}>이름 저장</button>
+                    <button className="photo-btn" onClick={() => void savePlantName()}>{tr('이름 저장')}</button>
                 </div>
                 {toast && <div className="toast">{toast}</div>}
                 <div className="bar" title={`${formatXp(pet.xp)}/${need} XP`}>
@@ -179,34 +180,34 @@ function GardenView(): React.JSX.Element {
                 <div className="bar-label">{formatXp(pet.xp)} / {need} XP</div>
 
                 <div className="stats">
-                    <div><b>{formatXp(todayXp)}</b><span>오늘 XP</span></div>
-                    <div><b>{Math.floor(stats.totalXp).toLocaleString()}</b><span>누적 XP</span></div>
-                    <div><b>{streak}일</b><span>연속 사용</span></div>
+                    <div><b>{formatXp(todayXp)}</b><span>{tr('오늘 XP')}</span></div>
+                    <div><b>{Math.floor(stats.totalXp).toLocaleString()}</b><span>{tr('누적 XP')}</span></div>
+                    <div><b>{tr('{n}일', {n: streak})}</b><span>{tr('연속 사용')}</span></div>
                     <div>
-                        <b>{nextStage ? (eta === null ? '-' : `${eta}일`) : '최종'}</b>
-                        <span>{nextStage ? `${nextStage.name}까지` : '단계'}</span>
+                        <b>{nextStage ? (eta === null ? '-' : tr('{n}일', {n: eta})) : tr('최종')}</b>
+                        <span>{nextStage ? tr('{stage}까지', {stage: nextStage.name}) : tr('단계')}</span>
                     </div>
                 </div>
                 <div className="bar-label">
-                    정원 날씨 {WEATHER_NAME[weather]}
-                    {avg > 0 && ` · 오늘은 최근 7일 평균의 ${Math.round((todayXp / avg) * 100)}%`}
+                    {tr('정원 날씨')} {weatherName(weather)}
+                    {avg > 0 && tr(' · 오늘은 최근 7일 평균의 {pct}%', {pct: Math.round((todayXp / avg) * 100)})}
                 </div>
                 <div className="bar-label">
                     {status.lastCheckedAt === null
-                        ? '로그 확인 전'
-                        : `마지막 확인 ${new Date(status.lastCheckedAt).toLocaleTimeString()} · 이번 실행 +${formatXp(status.gainedXp)} XP`}
+                        ? tr('로그 확인 전')
+                        : tr('마지막 확인 {time} · 이번 실행 +{xp} XP', {time: new Date(status.lastCheckedAt).toLocaleTimeString(), xp: formatXp(status.gainedXp)})}
                 </div>
 
                 {status.error && <div className="warn-line">{status.error}</div>}
                 {settings.dailyGoal > 0 && (
                     <div className="goal">
-                        <div className="goal-text">오늘 목표 {formatXp(Math.min(todayXp, settings.dailyGoal))} / {settings.dailyGoal} XP{todayXp >= settings.dailyGoal ? ' · 달성!' : ''}</div>
+                        <div className="goal-text">{tr('오늘 목표 {now} / {goal} XP', {now: formatXp(Math.min(todayXp, settings.dailyGoal)), goal: settings.dailyGoal})}{todayXp >= settings.dailyGoal ? tr(' · 달성!') : ''}</div>
                         <div className="bar"><div className="bar-fill goal-fill" style={{width: `${Math.min(100, (todayXp / settings.dailyGoal) * 100)}%`}}/></div>
                     </div>
                 )}
                 <UsageChart stats={stats}/>
 
-                <h2>도감 {owned.size}/{SPECIES.length}{gold ? ' · 황금 화분 획득!' : ''}</h2>
+                <h2>{tr('도감 {n}/{total}', {n: owned.size, total: SPECIES.length})}{gold ? tr(' · 황금 화분 획득!') : ''}</h2>
                 <div className="shelf">
                     {SPECIES.map((sp) => {
                         const own = owned.get(sp.id)
@@ -216,7 +217,7 @@ function GardenView(): React.JSX.Element {
                                 className={`slot${own ? '' : ' locked'}${selected === sp.id ? ' on' : ''}`}
                                 disabled={!own}
                                 onClick={() => setSelected(selected === sp.id ? null : sp.id)}
-                                title={own ? sp.name : '아직 만나지 못한 식물'}
+                                title={own ? sp.name : tr('아직 만나지 못한 식물')}
                             >
                                 <PetSprite stage="tree" species={sp.id} scale={3} gold={gold}/>
                                 <span>{own ? sp.name : '???'}</span>
@@ -227,15 +228,15 @@ function GardenView(): React.JSX.Element {
                     })}
                 </div>
                 <div className="unlock-line">
-                    정원 소품 {unlockedItems(collection.length).length}/{UNLOCKS.length}
-                    {nextUnlock(collection.length) ? ` · 식물 ${nextUnlock(collection.length)!.remaining}개를 더 완성하면 '${nextUnlock(collection.length)!.item.name}'` : ' · 모두 해금!'}
+                    {tr('정원 소품 {n}/{total}', {n: unlockedItems(collection.length).length, total: UNLOCKS.length})}
+                    {nextUnlock(collection.length) ? tr(" · 식물 {n}개를 더 완성하면 '{item}'", {n: nextUnlock(collection.length)!.remaining, item: nextUnlock(collection.length)!.item.name}) : tr(' · 모두 해금!')}
                 </div>
                 {selected && picked && (
                     <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt} plants={selectedPlants}/>
                 )}
-                {collection.length === 0 && <p className="empty">큰 나무까지 키워 완성하면 이곳에 심어져요.</p>}
+                {collection.length === 0 && <p className="empty">{tr('큰 나무까지 키워 완성하면 이곳에 심어져요.')}</p>}
 
-                <h2>업적 {got.size}/{ACHIEVEMENTS.length}</h2>
+                <h2>{tr('업적 {n}/{total}', {n: got.size, total: ACHIEVEMENTS.length})}</h2>
                 <div className="badges">
                     {ACHIEVEMENTS.map((a) => (
                         <div key={a.id} className={`badge${got.has(a.id) ? '' : ' locked'}`} title={a.desc}>
@@ -245,19 +246,19 @@ function GardenView(): React.JSX.Element {
                     ))}
                 </div>
 
-                <h2>현재 식물 성장 기록</h2>
+                <h2>{tr('현재 식물 성장 기록')}</h2>
                 <ol className="timeline">
                     {(pet.growthHistory ?? []).map((mark, i) => {
                         const markStage = STAGES.find((s) => s.id === mark.stage)
                         return (
                             <li key={`${mark.at}-${mark.stage}-${i}`}>
                                 <b>{markStage?.name ?? mark.stage}</b>
-                                <time>{mark.kind === 'start' ? '기록 시작 · ' : ''}{new Date(mark.at).toLocaleString()}</time>
+                                <time>{mark.kind === 'start' ? tr('기록 시작 · ') : ''}{new Date(mark.at).toLocaleString()}</time>
                             </li>
                         )
                     })}
                 </ol>
-                <h2>성장 단계</h2>
+                <h2>{tr('성장 단계')}</h2>
                 <ul className="stages">
                     {STAGES.map((s) => (
                         <li key={s.id} className={pet.level >= s.minLevel ? 'done' : 'locked'}>
@@ -266,7 +267,7 @@ function GardenView(): React.JSX.Element {
                     ))}
                 </ul>
 
-                <h2>설정</h2>
+                <h2>{tr('설정')}</h2>
                 <SettingsPanel tools={status.tools}/>
             </div>
         </div>
