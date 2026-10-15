@@ -375,6 +375,7 @@ function pollLogsOnce(): void {
 }
 
 ipcMain.handle('pet:addTestXp', () => {
+    if (app.isPackaged) return getState() // 설치된 앱에서는 테스트 경험치를 막는다 (개발 실행 전용)
     // 매번 새 ID의 가짜 기록. 실제 연동과 같은 경로(중복 방지 포함)를 탄다.
     ingestUsage([{
         id: `test-${Date.now()}-${Math.random()}`,

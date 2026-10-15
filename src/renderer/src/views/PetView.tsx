@@ -161,9 +161,11 @@ function PetView(): React.JSX.Element {
                 <div className="xptext">{formatXp(pet.xp)} / {xpToNextLevel(pet.level)} XP</div>
             </div>
             <div className="row">
-                <button className="pbtn" title={tr('경험치 테스트 (+30 XP)')} onClick={() => window.api.addTestXp()}>
-                    <PixelArt rows={SPARKLE} colors={ICON_COLORS} scale={2}/>XP
-                </button>
+                {import.meta.env.DEV && ( // 테스트 버튼은 개발 실행(npm run dev)에서만 보인다
+                    <button className="pbtn" title={tr('경험치 테스트 (+30 XP)')} onClick={() => window.api.addTestXp()}>
+                        <PixelArt rows={SPARKLE} colors={ICON_COLORS} scale={2}/>XP
+                    </button>
+                )}
                 <button className="pbtn" title={tr('정원 열기')} onClick={() => window.api.openGarden()}>
                     <PixelArt rows={SPROUT} colors={ICON_COLORS} scale={2}/>{tr('정원')}
                 </button>
