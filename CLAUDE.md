@@ -204,4 +204,5 @@ AI별 연동부는 가능한 경우 아래와 같은 공통 형식으로 변환�
 - Codex 로그: `~/.codex/sessions/**/*.jsonl`의 `token_count` 이벤트에서 이번 턴 사용량(`last_token_usage`)만 쓴다. 입력은 `input_tokens - cached_input_tokens`, 중복 방지 ID는 `timestamp|누적 총합`. `~/.codex/auth.json`은 절대 읽지 않는다.
 - 경험치 = (입력 + 출력×`OUTPUT_WEIGHT`(5)) ÷ `TOKENS_PER_XP`(30,000). 소수점은 버리지 않고 누적한다(기록 1건이 작아서 건건이 버리면 0이 된다). 비율은 실제 Claude Code 사용량(가중 토큰 하루 중위값 약 3M)으로 꽃 피움까지 약 2주가 되게 잡았다.
 - 개발 실행과 설치 앱은 같은 `%APPDATA%\tokengrove\save.json`을 공유한다.
-- 외부 통신은 업데이트 확인(`api.github.com/repos/oceanfromthewave/tokenGrove/releases/latest`) 하나뿐이다. 설정에서 끌 수 있고, 응답은 `parseLatestRelease`로 검증하며 이 저장소의 릴리스 주소만 브라우저로 연다. 자동 설치는 하지 않는다(서명 없는 설치 파일).
+- 외부 통신은 업데이트 하나뿐이다: 확인(`api.github.com/repos/oceanfromthewave/tokenGrove/releases/latest`)과, 사용자가 [업데이트]를 눌렀을 때만 `electron-updater`(GitHub 릴리스의 `latest.yml` 체크섬 검증)로 내려받아 "다시 시작하고 설치"한다. 설정에서 확인을 끌 수 있고, 응답은 `parseLatestRelease`로 검증하며 개발 실행이나 실패 시에는 이 저장소의 릴리스 주소만 브라우저로 연다. 자동 설치는 하지 않는다(서명 없는 설치 파일).
+- 릴리스할 때는 `dist/`의 `TokenGrove-Setup-<버전>.exe`, `.blockmap`, `latest.yml` 셋을 모두 올려야 앱 안 업데이트가 새 버전을 찾는다. v0.6.0 미만 설치본에는 이 기능이 없어 수동 설치가 필요하다.
