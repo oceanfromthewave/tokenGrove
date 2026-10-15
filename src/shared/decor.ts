@@ -1,5 +1,5 @@
 // 정원 풍경을 꾸미는 작은 도트 그림. '.' = 투명. 식물과 같은 방식(글자 격자 + 색 표)이다.
-export type DecorId = 'tuft' | 'flowerPink' | 'flowerYellow' | 'flowerWhite' | 'mushroom' | 'rock' | 'stone' | 'bush' | 'pine' | 'bee' | 'bird' | 'butterfly'
+export type DecorId = 'tuft' | 'flowerPink' | 'flowerYellow' | 'flowerWhite' | 'mushroom' | 'rock' | 'stone' | 'bush' | 'pine' | 'bee' | 'bird' | 'butterfly' | 'birdhouse' | 'lantern' | 'signpost' | 'flowerbed'
 
 export const DECOR: Record<DecorId, string[]> = {
     tuft: ['.g..g.', 'g.gg.g', 'gGgGgg', '.gggg.'],
@@ -12,12 +12,17 @@ export const DECOR: Record<DecorId, string[]> = {
     pine: ['...h...', '..hhh..', '..hGh..', '.hhhhh.', '.hhGhh.', 'hhhhhhh', '...t...', '...t...'],
     bee: ['.w.w.', 'qoqoq', '.qqq.'],
     bird: ['..BB..', '.BBBBq', 'BBwBB.', '.BBBB.', '..o.o.'],
+    // 해금 소품: 새집, 등불, 푯말, 화단 (o = 윤곽선, a e l = 나무 밝음/보통/어두움, R = 지붕, Y L = 불빛)
+    birdhouse: ['..RRRR..', '.RRRRRR.', 'RRRRRRRR', '.aaaaaa.', '.aaooaa.', '.aaooaa.', '.eeeeee.', '...ll...', '...ll...', '...ll...'],
+    lantern: ['.lll.', 'lYYYl', 'lYLYl', 'lYYYl', '.lll.', '..l..', '..l..', '..l..', '..l..', '..l..', '.lll.'],
+    signpost: ['eeeeeeeee', 'eaaaaaaae', 'eaaaaaaae', 'eeeeeeeee', '....l....', '....l....', '....l....', '....l....'],
+    flowerbed: ['.p..q..w..', '.g..g..g..', 'eeeeeeeeee', 'eaaaaaaaae', 'eeeeeeeeee'],
     rock: ['..KKK..', '.KKkkK.', 'KkkkkkK', '.kkkkk.'],
     butterfly: ['pp...pp', 'pppoppp', '.ppopp.', 'pppoppp', 'pp...pp']
 }
 
 export const DECOR_COLORS: Record<string, string> = {
-    g: '#5aa84a', h: '#3f8040', B: '#5aa0ff', t: '#6b4a2b', G: '#7fd06a', p: '#ff9ccf', q: '#ffd84d', w: '#ffffff', c: '#c9853b',
+    g: '#5aa84a', h: '#3f8040', a: '#dcae75', e: '#b9824c', l: '#6b4a2b', R: '#c0453b', Y: '#ffe27a', L: '#fff6c8', B: '#5aa0ff', t: '#6b4a2b', G: '#7fd06a', p: '#ff9ccf', q: '#ffd84d', w: '#ffffff', c: '#c9853b',
     r: '#e5484d', s: '#f4ecd0', K: '#c3c8d0', k: '#8a8f98', o: '#2a1c12'
 }
 

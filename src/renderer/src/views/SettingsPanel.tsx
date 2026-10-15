@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {GOALS, SPEED_NAME, type Speed} from '../../../shared/settings'
 import {useSettings} from '../usePet'
 
@@ -6,6 +7,12 @@ const SPEEDS: Speed[] = ['slow', 'normal', 'fast']
 // 연동 상태(도구별로 로그를 찾았는지)와 설정. 설정은 바로 저장되고 모든 창에 적용된다.
 function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): React.JSX.Element {
     const [settings, update] = useSettings()
+    const [note, setNote] = useState('')
+    const run = async (job: 'export' | 'import'): Promise<void> => {
+        const result = await (job === 'export' ? window.api.exportData() : window.api.importData())
+        setNote(result === 'saved' ? '데이터를 내보냈어요' : result === 'loaded' ? '데이터를 불러왔어요' : result === 'error' ? '파일을 처리하지 못했어요' : '')
+        if (result !== 'canceled') setTimeout(() => setNote(''), 3000)
+    }
 
     const toolRow = (key: 'claude' | 'codex', name: string): React.JSX.Element => {
         const files = tools[key]
@@ -40,6 +47,16 @@ function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): R
                 </span>
                 <input type="checkbox" checked={settings.updateCheck} onChange={(e) => update({updateCheck: e.target.checked})}/>
             </label>
+            <div className="set-row">
+                <span>
+                    <b>데이터 옮기기</b>
+                    <small>{note || '펫, 도감, 통계, 설정을 파일로 내보내고 다른 PC에서 불러와요'}</small>
+                </span>
+                <div className="seg">
+                    <button onClick={() => void run('export')}>내보내기</button>
+                    <button onClick={() => void run('import')}>불러오기</button>
+                </div>
+            </div>
             <div className="set-row">
                 <span>
                     <b>하루 목표</b>

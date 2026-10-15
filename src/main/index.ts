@@ -1,10 +1,11 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
-import {writeFile} from 'fs/promises'
+import {readFile, stat, writeFile} from 'fs/promises'
 import {join} from 'path'
 import {fallbackPos, fitsInAny} from '../shared/windowPos'
 import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
 import {parseRect} from '../shared/exportRect'
+import {MAX_IMPORT_BYTES, buildExport, parseImport} from '../shared/exportData'
 import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '../shared/settings'
 import {EMPTY_SAVE} from '../shared/save'
 import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
@@ -332,6 +333,63 @@ ipcMain.handle('pet:addTestXp', () => {
     return getState()
 })
 ipcMain.on('garden:open', openGarden)
+
+// 펫/도감/통계/설정을 파일로 내보내고 불러온다. 파일 위치는 사용자가 저장/열기 창에서 직접 고른다.
+// 불러오기는 현재 PC의 로그 읽은 위치와 처리한 기록은 그대로 두기 때문에 같은 사용 기록이 다시 경험치가 되지 않는다.
+type DataResult = 'saved' | 'loaded' | 'canceled' | 'error'
+
+ipcMain.handle('data:export', async (e): Promise<DataResult> => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win || win !== gardenWin) return 'error'
+    try {
+        const {canceled, filePath} = await dialog.showSaveDialog(win, {
+            title: '데이터 내보내기',
+            defaultPath: join(app.getPath('documents'), `TokenGrove-backup-${dateKey(new Date())}.json`),
+            filters: [{name: 'JSON', extensions: ['json']}]
+        })
+        if (canceled || !filePath) return 'canceled'
+        await writeFile(filePath.toLowerCase().endsWith('.json') ? filePath : filePath + '.json',
+            buildExport({pet, petWindow: petPos, processed, collection, stats, settings, onboarded, skippedVersion, logOffsets}))
+        return 'saved'
+    } catch (err) {
+        console.error('데이터 내보내기 실패:', err instanceof Error ? err.message : err)
+        return 'error'
+    }
+})
+
+ipcMain.handle('data:import', async (e): Promise<DataResult> => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win || win !== gardenWin) return 'error'
+    try {
+        const {canceled, filePaths} = await dialog.showOpenDialog(win, {title: '데이터 불러오기', properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json']}]})
+        if (canceled || !filePaths[0]) return 'canceled'
+        if ((await stat(filePaths[0])).size > MAX_IMPORT_BYTES) return 'error'
+        const data = parseImport(await readFile(filePaths[0], 'utf8'))
+        if (!data) return 'error'
+        const {response} = await dialog.showMessageBox(win, {
+            type: 'warning',
+            title: '데이터 불러오기',
+            message: '현재 데이터를 불러온 데이터로 바꿀까요?',
+            detail: '지금 키우는 식물, 도감, 통계, 설정이 모두 바뀌어요. 되돌릴 수 없으니 필요하면 먼저 내보내기를 해 두세요.',
+            buttons: ['바꾸기', '취소'],
+            defaultId: 1,
+            cancelId: 1
+        })
+        if (response !== 0) return 'canceled'
+        pet = data.pet
+        collection = data.collection
+        stats = data.stats
+        settings = data.settings
+        settle()
+        persist()
+        broadcastState()
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('settings:changed', settings)
+        return 'loaded'
+    } catch (err) {
+        console.error('데이터 불러오기 실패:', err instanceof Error ? err.message : err)
+        return 'error'
+    }
+})
 
 // 정원 풍경을 PNG로 저장한다. 파일 위치는 사용자가 저장 창에서 직접 고른다.
 // 렌더러가 보내는 캡처 영역은 검증하고, 정원 창에서 온 요청만 받는다.

@@ -1185,3 +1185,15 @@ body,
   font-size: 10px;
   opacity: 0.7;
 }
+
+/* 해금 소품: 밤에는 등불이 빛난다 */
+.night .unlock.lantern {
+  filter: drop-shadow(0 0 8px rgba(255, 230, 140, 0.9)) brightness(1.4);
+}
+
+.unlock-line {
+  margin-top: 8px;
+  font-size: 12px;
+  text-align: left;
+  opacity: 0.85;
+}

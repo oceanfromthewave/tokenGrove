@@ -6,6 +6,7 @@ import {RARITY, hasGoldPot, SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, t
 import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
 import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
 import {useGame, useSettings, useStatus} from '../usePet'
+import {UNLOCKS, nextUnlock, unlockedItems} from '../../../shared/unlocks'
 import SettingsPanel from './SettingsPanel'
 import UsageChart from './UsageChart'
 import SpeciesDetail from './SpeciesDetail'
@@ -29,6 +30,14 @@ const PINES: { x: number; y: number; scale: number }[] = [
     {x: 3, y: 124, scale: 3}, {x: 9, y: 132, scale: 4}, {x: 15, y: 122, scale: 3}, {x: 24, y: 118, scale: 3},
     {x: 70, y: 120, scale: 3}, {x: 77, y: 128, scale: 4}, {x: 84, y: 121, scale: 3}, {x: 92, y: 126, scale: 4}
 ]
+
+// 해금되는 소품의 위치. x는 가로 %, y는 바닥에서의 높이(px). 밤에는 등불이 빛난다.
+const UNLOCK_SPOTS: Record<string, { x: number; y: number; scale: number }> = {
+    birdhouse: {x: 27, y: 100, scale: 3},
+    lantern: {x: 63, y: 18, scale: 3},
+    signpost: {x: 80, y: 12, scale: 3},
+    flowerbed: {x: 9, y: 6, scale: 3}
+}
 
 // 잔디 위 장식. x는 가로 위치(%), y는 바닥에서의 높이(px)
 const DECOR_SPOTS: { art: DecorId; x: number; y: number; scale?: number }[] = [
@@ -137,6 +146,11 @@ function GardenView(): React.JSX.Element {
                 <div className="bird"><PixelArt rows={DECOR.bird} colors={DECOR_COLORS} scale={3}/></div>
                 <div className="bee"><PixelArt rows={DECOR.bee} colors={DECOR_COLORS} scale={3}/></div>
                 <div className="weather"/>
+                {unlockedItems(collection.length).map((u) => (
+                    <div key={u.id} className={`decor unlock ${u.id}`} style={{left: `${UNLOCK_SPOTS[u.id].x}%`, bottom: UNLOCK_SPOTS[u.id].y}} title={u.name}>
+                        <PixelArt rows={DECOR[u.id]} colors={DECOR_COLORS} scale={UNLOCK_SPOTS[u.id].scale}/>
+                    </div>
+                ))}
                 <div className="butterfly"><PixelArt rows={DECOR.butterfly} colors={DECOR_COLORS} scale={3}/></div>
             </div>
 
@@ -211,6 +225,10 @@ function GardenView(): React.JSX.Element {
                             </button>
                         )
                     })}
+                </div>
+                <div className="unlock-line">
+                    정원 소품 {unlockedItems(collection.length).length}/{UNLOCKS.length}
+                    {nextUnlock(collection.length) ? ` · 식물 ${nextUnlock(collection.length)!.remaining}개를 더 완성하면 '${nextUnlock(collection.length)!.item.name}'` : ' · 모두 해금!'}
                 </div>
                 {selected && picked && (
                     <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt} plants={selectedPlants}/>
