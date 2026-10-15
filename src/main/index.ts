@@ -1,5 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
 import {readFile, stat, writeFile} from 'fs/promises'
+import {autoUpdater} from 'electron-updater'
 import {join} from 'path'
 import {fallbackPos, fitsInAny} from '../shared/windowPos'
 import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
@@ -67,8 +68,59 @@ function persist(): void {
     writeSave({pet, petWindow: petPos, processed, collection, stats, settings, onboarded, skippedVersion, logOffsets})
 }
 
+// 새 버전을 내려받아 설치한다. 설치된 앱(패키지)에서만 동작하고, 개발 실행이나 실패 시에는 다운로드 페이지를 연다.
+// 내려받기는 사용자가 [업데이트]를 눌렀을 때만 하고, 자동 설치도 하지 않는다. (무결성은 릴리스의 latest.yml 체크섬으로 확인)
+let updating = false
+async function downloadAndInstall(releaseUrl: string): Promise<void> {
+    if (!app.isPackaged) {
+        await shell.openExternal(releaseUrl)
+        return
+    }
+    if (updating) return
+    updating = true
+    autoUpdater.autoDownload = false
+    autoUpdater.autoInstallOnAppQuit = false
+    const onProgress = (p: { percent: number }): void => tray?.setToolTip(`Token Grove ${Math.floor(p.percent)}%`)
+    autoUpdater.on('download-progress', onProgress)
+    try {
+        new Notification({title: 'Token Grove', body: tr('새 버전을 내려받는 중이에요')}).show()
+        const found = await autoUpdater.checkForUpdates()
+        if (!found?.isUpdateAvailable) throw new Error('업데이트 정보를 찾지 못함')
+        await autoUpdater.downloadUpdate()
+        const {response} = await dialog.showMessageBox({
+            type: 'info',
+            title: 'Token Grove',
+            message: tr('다운로드를 마쳤어요'),
+            detail: tr('지금 다시 시작하면 v{version} 설치가 끝나요. 저장된 펫과 도감은 그대로예요.', {version: found.updateInfo.version}),
+            buttons: [tr('다시 시작하고 설치'), tr('나중에')],
+            defaultId: 0,
+            cancelId: 1
+        })
+        if (response === 0) {
+            persist()
+            autoUpdater.quitAndInstall(true, true) // 조용히 설치하고 끝나면 다시 실행
+        }
+    } catch (err) {
+        console.error('업데이트 설치 실패:', err instanceof Error ? err.message : err)
+        const {response} = await dialog.showMessageBox({
+            type: 'warning',
+            title: 'Token Grove',
+            message: tr('업데이트를 설치하지 못했어요'),
+            detail: tr('다운로드 페이지에서 설치 파일을 직접 받을 수 있어요.'),
+            buttons: [tr('다운로드 페이지 열기'), tr('닫기')],
+            defaultId: 0,
+            cancelId: 1
+        })
+        if (response === 0) await shell.openExternal(releaseUrl)
+    } finally {
+        autoUpdater.off('download-progress', onProgress)
+        tray?.setToolTip('Token Grove')
+        updating = false
+    }
+}
+
 // 새 버전 확인. GitHub의 '최신 릴리스' 정보만 받아오고(사용 기록 등은 보내지 않는다), 새 버전이면 물어본다.
-// 업데이트를 고르면 다운로드 페이지를 브라우저로 연다. 설치 파일을 받아 실행하면 저장 데이터는 그대로 유지된다.
+// 업데이트를 고르면 새 버전을 내려받아 설치한다. 저장 데이터는 그대로 유지된다.
 async function checkForUpdate(manual: boolean): Promise<void> {
     if (!manual && !settings.updateCheck) return
     const current = app.getVersion()
@@ -93,12 +145,12 @@ async function checkForUpdate(manual: boolean): Promise<void> {
             type: 'info',
             title: tr('새 버전이 있어요'),
             message: tr('새 버전 v{version}이 나왔어요. 업데이트 하시겠어요?', {version: latest.version}),
-            detail: tr('현재 v{current}\n\n업데이트를 누르면 다운로드 페이지가 열려요. 설치 파일을 받아 실행하면 저장된 펫과 도감은 그대로 유지돼요.', {current}),
-            buttons: [tr('업데이트 (다운로드 페이지 열기)'), tr('나중에'), tr('이 버전 건너뛰기')],
+            detail: tr('현재 v{current}\n\n업데이트를 누르면 새 버전을 내려받아요. 설치 후 다시 시작해도 저장된 펫과 도감은 그대로 유지돼요.', {current}),
+            buttons: [tr('업데이트'), tr('나중에'), tr('이 버전 건너뛰기')],
             defaultId: 0,
             cancelId: 1
         })
-        if (response === 0) await shell.openExternal(latest.url) // parseLatestRelease가 우리 저장소의 릴리스 주소만 통과시킨다
+        if (response === 0) await downloadAndInstall(latest.url) // parseLatestRelease가 우리 저장소의 릴리스 주소만 통과시킨다
         if (response === 2) {
             skippedVersion = latest.version
             persist()
