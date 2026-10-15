@@ -88,8 +88,8 @@ class Layer {
     }
 }
 
-type RadialKind = 'daisy' | 'cosmos' | 'sunflower' | 'poppy' | 'cherry' | 'bell' | 'rose' | 'ball'
-type Kind = RadialKind | 'tulip' | 'spike'
+type RadialKind = 'daisy' | 'cosmos' | 'poppy' | 'cherry' | 'bell' | 'rose' | 'ball'
+type Kind = RadialKind | 'tulip' | 'spike' | 'pine'
 
 // 둥근 꽃: 각도(th)마다 반지름 R이 달라지는 모양 + 꽃술 + 명암. d x h 칸의 격자(위에서 약간 내려다본 느낌이라 h < d).
 function radial(kind: RadialKind, d: number, h: number): string[] {
@@ -118,13 +118,6 @@ function radial(kind: RadialKind, d: number, h: number): string[] {
                     if (r > R) return '.'
                     if (r < 0.24) return nx < 0 && ny < 0 ? 'Y' : 'y'
                     return lobe < -0.7 && r > 0.35 ? 'E' : lit(R)
-                }
-                case 'sunflower': {
-                    const lobe = Math.cos(26 * th)
-                    R = 0.9 + 0.1 * lobe
-                    if (r > R) return '.'
-                    if (r < 0.6) return r > 0.5 ? 'z' : (x * 7 + y * 3) % 5 === 0 ? 'Y' : 'y' // 씨앗 무늬 꽃심
-                    return lobe < -0.9 ? 'E' : lit(R)
                 }
                 case 'poppy': {
                     const lobe = Math.cos(4 * th)
@@ -196,6 +189,7 @@ function spike(w = 7, h = 11): string[] {
 }
 
 function flowerGrid(kind: Kind, d: number): string[] {
+    if (kind === 'pine') return [] // 소나무는 꽃 그림을 쓰지 않는다 (pine() 참고)
     if (kind === 'tulip') return tulip(Math.max(7, Math.round(d * 0.58)), Math.round(d * 0.7))
     if (kind === 'spike') return spike(Math.max(5, Math.round(d * 0.42)), Math.round(d * 0.7))
     return radial(kind, d, Math.round(d * 0.66))
@@ -229,20 +223,6 @@ const TULIP_POD = ['.rr.', 'rQrr', 'rrrx', 'rxrx', 'rxrx', 'rrrx', '.rrx', '..x.
 const PUFF = ['..FF..', '.FfFF.', 'FFFfFF', 'FfFFFf', '.FFfF.', '..FF..'] // 코스모스: 솜털 씨앗
 // 라벤더: 시든 이삭 (꽃 색을 어둡게)
 const dry = (g: string[]): string[] => g.map((row) => row.replace(/f/g, 'E'))
-
-// 해바라기 씨앗 머리: 씨앗 무늬 원반 + 시든 꽃잎이 아래쪽에 조금 남아 있다
-function seedHead(d: number, h: number): string[] {
-    return Array.from({length: h}, (_, y) =>
-        Array.from({length: d}, (_, x) => {
-            const nx = (x + 0.5 - d / 2) / (d / 2), ny = (y + 0.5 - h / 2) / (h / 2)
-            const r = Math.hypot(nx, ny)
-            if (r > 1) return '.'
-            if (r > 0.86) return ny > 0.2 && nx > -0.2 ? 'E' : 'z' // 가장자리: 아래쪽은 시든 꽃잎 색
-            const light = -(nx * 0.55 + ny * 0.85)
-            return (x * 7 + y * 3) % 5 === 0 ? 'Y' : light > 0.35 ? 'Y' : 'y'
-        }).join('')
-    )
-}
 
 // 열매를 놓는 도구: 가지 끝(tipX, tipY)에서 아래로 매달리거나(hang), 위로 서 있다(stand)
 function fruitLayer(kind: Kind, l: Layer): void {
@@ -286,13 +266,6 @@ function fruitLayer(kind: Kind, l: Layer): void {
             hang(...L, 5, 6, POD)
             hang(...R, 17, 7, POD)
             break
-        case 'sunflower': { // 무겁게 고개 숙인 씨앗 머리 + 옆의 작은 머리
-            const head = seedHead(15, 11)
-            l.line(CX - 1, 12, CX - 1, 7).line(CX, 12, CX, 7)
-            l.stamp(0, CX - 7, head)
-            hang(...L, 4, 8, seedHead(8, 6))
-            break
-        }
         case 'tulip': // 위로 선 씨앗 주머니
             stand(CX - 1, 12, CX - 1, 9, TULIP_POD)
             stand(...L, 5, 10, TULIP_POD)
@@ -357,6 +330,88 @@ function canopy(): string[] {
 
 const CX = SRC / 2 // 화면 가운데(줄기) 위치
 
+// 소나무: 꽃 대신 솔잎 층, 꽃가루(노랑) 송이, 솔방울(갈색)로 자란다. 전체를 전체 폭 층(Layer)에 그린다.
+const PINE_CX = (SRC - 1) / 2
+
+// 솔잎 한 층: 가장자리가 톱니 모양인 삼각형. 왼쪽 위가 밝고 아래쪽 줄이 어둡다.
+function tier(l: Layer, top: number, h: number, hw: number): void {
+    for (let i = 0; i < h; i++) {
+        const w = 1 + ((hw - 1) * i) / Math.max(1, h - 1)
+        for (let x = Math.ceil(PINE_CX - w); x <= Math.floor(PINE_CX + w); x++) {
+            const dx = Math.abs(x - PINE_CX)
+            if (i % 2 === 1 && i < h - 1 && dx > w - 1.2) continue // 톱니
+            const light = -(((x - PINE_CX) / hw) * 0.6 + (i / h - 0.5) * 0.7)
+            l.put(top + i, x, i === h - 1 || light < -0.3 ? 'h' : light > 0.3 || (x * 5 + i * 7) % 9 === 0 ? 'G' : 'g')
+        }
+    }
+}
+
+// 솔잎 덩어리(납작한 타원): 큰 소나무의 가지 끝
+function pad(l: Layer, cx: number, cy: number, rx: number, ry: number): void {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+        for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+            const nx = (x - cx) / rx, ny = (y - cy) / ry
+            const r = Math.hypot(nx, ny)
+            if (r > 1 + 0.12 * Math.cos(5 * Math.atan2(ny, nx))) continue
+            const light = -(nx * 0.55 + ny * 0.85)
+            l.put(y, x, light > 0.4 || (x * 5 + y * 7) % 9 === 0 ? 'G' : light < -0.3 || ny > 0.6 ? 'h' : 'g')
+        }
+    }
+}
+
+const POLLEN = ['.Y.', 'YyY', '.y.'] // 꽃가루 송이
+const CONE = ['.rr.', 'rQrr', 'rrrx', '.rx.'] // 솔방울
+
+function pine(stage: StageId, l: Layer): void {
+    const trunk = (from: number): void => {
+        for (let y = from; y <= G; y++) l.put(y, 10, 'k').put(y, 11, 'k')
+    }
+    const tiers = (list: [number, number, number][]): void => {
+        const last = list[list.length - 1]
+        trunk(last[0] + last[1])
+        for (const [top, h, hw] of list) tier(l, top, h, hw)
+    }
+    // 층의 끝에 한쪽씩 번갈아 놓는다 (맨 위 층은 제외)
+    const corners = (list: [number, number, number][], g: string[]): void => {
+        list.forEach(([top, h, hw], i) => {
+            if (i === 0) return
+            const x = i % 2 ? Math.round(PINE_CX - hw) - 1 : Math.round(PINE_CX + hw) - 1
+            l.stamp(top + h - 2, x, g)
+        })
+    }
+    const small: [number, number, number][] = [[3, 4, 2.5], [6, 4, 4], [9, 4, 5.5]]
+    const mid: [number, number, number][] = [[1, 4, 2.5], [4, 4, 4], [7, 4, 5.5], [10, 4, 7]]
+    const big: [number, number, number][] = [[0, 4, 2.5], [3, 4, 4], [6, 4, 5.5], [9, 4, 7], [12, 3, 8.5]]
+    switch (stage) {
+        case 'leafy':
+            tiers(small)
+            break
+        case 'bud': // 새순(연한 초록 촛대)이 가지 끝에 올라온다
+            tiers(mid)
+            for (const [top] of mid) l.put(top - 1, 10, 'F').put(top - 1, 11, 'f')
+            break
+        case 'bloom': // 꽃가루 송이
+            tiers(mid)
+            corners(mid, POLLEN)
+            break
+        case 'full':
+            tiers(big)
+            corners(big, POLLEN)
+            break
+        case 'fruit': // 솔방울
+            tiers(big)
+            corners(big, CONE)
+            break
+        default: { // 큰 소나무: 굽은 줄기 위에 납작한 솔잎 덩어리 세 개
+            for (const x of [10, 11]) l.line(x, G, x, 11).line(x, 11, x - 2, 6).line(x, 11, x + 4, 8).line(x, 12, x - 4, 10, 'k')
+            pad(l, 9, 3.5, 6.5, 3)
+            pad(l, 17, 7, 4.5, 2.5)
+            pad(l, 4.5, 9.5, 4.5, 2.5)
+            l.stamp(6, 6, CONE).stamp(8, 15, CONE)
+        }
+    }
+}
+
 // 덤불 둔덕: 땅에서 솟은 둥근 잎 더미. top줄부터 시작해 흙까지. 왼쪽 위가 밝다.
 function mound(top: number): string[] {
     const cx = (SRC - 1) / 2
@@ -410,6 +465,10 @@ function grown(kind: Kind, c: Canvas, l: Layer, flowerAt: (cx: number, bottom: n
 function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; layer: Layer } {
     const c = new Canvas(style)
     const l = new Layer()
+    if (kind === 'pine' && !['seed', 'tiny', 'sprout', 'young'].includes(stage)) {
+        pine(stage, l)
+        return {half: c.done(), layer: l}
+    }
     const body = (top: number): Canvas => c.stem(top).leaf(G, 5).leaf(G - 5, 4)
     const flowerAt = (cx: number, bottom: number, d: number): void => {
         const g = flowerGrid(kind, d)
@@ -506,7 +565,7 @@ const style = (kind: Kind, leaf: LeafStyle, colors: Record<string, string>): Sty
 
 const SPECIES_STYLE: Record<SpeciesId, Style> = {
     daisy: style('daisy', 'blade', {f: '#ffffff', y: '#ffd84d', r: '#ffffff'}),
-    sunflower: style('sunflower', 'broad', {g: '#6fb842', G: '#a3dd6a', h: '#4a8a2e', t: '#4a7f2e', f: '#ffc928', y: '#6b3f1d', r: '#8b5a2b'}),
+    pine: style('pine', 'slim', {g: '#3e7d4f', G: '#6fae7e', h: '#2a5a3a', t: '#5b3a22', f: '#cfe58a', y: '#ffd84d', r: '#9a6a3a'}),
     tulip: style('tulip', 'blade', {g: '#4fa665', G: '#82d38e', h: '#337a4a', t: '#357a45', f: '#e5484d', y: '#b3202a', r: '#e5484d'}),
     bellflower: style('bell', 'slim', {g: '#6aa87a', G: '#9bd6a8', h: '#417a56', t: '#3f7a49', f: '#9b6fe0', y: '#ffe27a', r: '#6b3fa0'}),
     rose: style('rose', 'broad', {g: '#3f8f5a', G: '#68bd7f', h: '#2a6a41', t: '#2f6e45', f: '#e0345a', y: '#a8183a', r: '#e5484d'}),

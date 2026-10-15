@@ -27,7 +27,7 @@ const BY_STAGE: Record<string, string[]> = {
 // 꽃이 핀 뒤(레벨 7 이상)에만 하는, 종마다의 말
 const BY_SPECIES: Record<SpeciesId, string> = {
     daisy: '하얀 꽃잎이 햇살을 닮았죠?',
-    sunflower: '해를 따라 고개를 돌려요',
+    pine: '사계절 푸른 게 제 자랑이에요',
     tulip: '빨간 컵에 햇살을 담고 있어요',
     bellflower: '보라색 별이 반짝여요',
     rose: '가시가 있어도 마음은 다정해요',

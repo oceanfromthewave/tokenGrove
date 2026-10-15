@@ -2,7 +2,7 @@
 // 새 한국어 문구를 tr()로 감싸면 여기에도 반드시 추가해야 한다. (i18n.test.mts가 빠진 번역을 찾아낸다)
 export const EN: Record<string, string> = {
     // 종, 희귀도, 성장 단계
-    '데이지': 'Daisy', '해바라기': 'Sunflower', '튤립': 'Tulip', '도라지': 'Balloon flower', '장미': 'Rose',
+    '데이지': 'Daisy', '소나무': 'Pine', '튤립': 'Tulip', '도라지': 'Balloon flower', '장미': 'Rose',
     '라벤더': 'Lavender', '수국': 'Hydrangea', '양귀비': 'Poppy', '코스모스': 'Cosmos', '벚꽃': 'Cherry blossom',
     '흔함': 'Common', '드묾': 'Uncommon', '희귀': 'Rare',
     '씨앗': 'Seed', '싹': 'Sprout', '새싹': 'Seedling', '어린 잎': 'Young leaves', '무성한 잎': 'Leafy', '꽃봉오리': 'Bud',
@@ -56,7 +56,7 @@ export const EN: Record<string, string> = {
 
     // 펫 말풍선: 종별
     '하얀 꽃잎이 햇살을 닮았죠?': 'My white petals look like sunshine, right?',
-    '해를 따라 고개를 돌려요': 'I turn my head to follow the sun',
+    '사계절 푸른 게 제 자랑이에요': "I'm proud to stay green all year",
     '빨간 컵에 햇살을 담고 있어요': 'My red cup is full of sunshine',
     '보라색 별이 반짝여요': 'My purple star is sparkling',
     '가시가 있어도 마음은 다정해요': 'I have thorns but a kind heart',

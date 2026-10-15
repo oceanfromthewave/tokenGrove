@@ -60,7 +60,7 @@ assert.equal(newSeed(() => 1).species, SPECIES[SPECIES.length - 1].id)
         const id = newSeed(lcg).species
         count[id] = (count[id] ?? 0) + 1
     }
-    assert.ok(count.daisy > count.sunflower && count.sunflower > count.rose, JSON.stringify(count))
+    assert.ok(count.daisy > count.lavender && count.lavender > count.rose, JSON.stringify(count))
 }
 assert.equal(newSeed(() => NaN).level, 1) // 이상한 난수에도 안전
 

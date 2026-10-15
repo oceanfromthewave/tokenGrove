@@ -34,12 +34,17 @@ function parseGrowthHistory(v: unknown): GrowthMark[] | undefined {
     }))
 }
 
+// 없어진 종은 새 종으로 옮긴다. (예전 저장 파일의 해바라기 -> 소나무)
+const RENAMED: Record<string, string> = {sunflower: 'pine'}
+const renamed = (v: unknown): unknown => (typeof v === 'string' && Object.hasOwn(RENAMED, v) ? RENAMED[v] : v)
+
 // 저장 파일 내용을 SaveData로 바꾼다. 형식이 이상하면 새로 시작(EMPTY_SAVE)한다.
 export function parseSave(text: string): SaveData {
     try {
         const raw = JSON.parse(text)
         const {level, xp} = raw.pet
-        const species = isSpeciesId(raw.pet.species) ? raw.pet.species : INITIAL_PET.species // 옛 저장 파일 호환
+        const petSpecies = renamed(raw.pet.species)
+        const species = isSpeciesId(petSpecies) ? petSpecies : INITIAL_PET.species // 옛 저장 파일 호환
         const name = parseName(raw.pet.name)
         const growthHistory = parseGrowthHistory(raw.pet.growthHistory)
         // 상한은 addXp 반복 횟수가 터무니없이 커지는 것을 막기 위한 안전장치
@@ -62,6 +67,7 @@ export function parseSave(text: string): SaveData {
         }
         const collection: Completed[] = Array.isArray(raw.collection)
             ? raw.collection
+                .map((c: Completed) => (c ? {...c, species: renamed(c.species) as Completed['species']} : c))
                 .filter((c: Completed) => isSpeciesId(c?.species) && typeof c.completedAt === 'string' && c.completedAt.length <= 40)
                 .map((c: Completed) => ({
                     species: c.species,
