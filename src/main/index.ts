@@ -12,7 +12,7 @@ import {DEFAULT_SETTINGS, SPEED_MULTIPLIER, mergeSettings, type Settings} from '
 import {EMPTY_SAVE} from '../shared/save'
 import {EMPTY_STATS, dateKey, recordGain, type Stats} from '../shared/stats'
 import {TOKENS_PER_XP, applyUsage, type CollectStatus, type UsageRecord} from '../shared/usage'
-import {loadSave, writeSave} from './store'
+import {backupBeforeReset, loadSave, writeSave} from './store'
 import {TRAY_ICON} from './trayIcon'
 import {RELEASES_API, isNewer, parseLatestRelease} from '../shared/version'
 import {defaultClaudeRoot, defaultCodexRoot, scanClaudeLogs, scanCodexLogs, type Offsets} from './claudeLogs'
@@ -441,6 +441,38 @@ ipcMain.handle('data:import', async (e): Promise<DataResult> => {
         return 'loaded'
     } catch (err) {
         console.error('데이터 불러오기 실패:', err instanceof Error ? err.message : err)
+        return 'error'
+    }
+})
+
+// 처음부터 다시 시작: 식물, 도감, 통계를 지우고 새 씨앗을 심는다. 설정과 로그 읽은 위치는 그대로 둔다.
+// 읽은 위치를 유지하므로 지금까지의 사용 기록이 다시 경험치가 되지 않는다. 지우기 전에 현재 저장 파일을 백업한다.
+ipcMain.handle('data:reset', async (e): Promise<'reset' | 'canceled' | 'error'> => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win || win !== gardenWin) return 'error'
+    try {
+        const {response} = await dialog.showMessageBox(win, {
+            type: 'warning',
+            title: tr('처음부터 다시 시작'),
+            message: tr('처음부터 다시 시작할까요?'),
+            detail: tr('지금 키우는 식물, 도감, 통계가 모두 지워지고 새 씨앗부터 시작해요. 지금 데이터는 save.before-reset.json 파일로 백업해 둬요.'),
+            buttons: [tr('초기화'), tr('취소')],
+            defaultId: 1,
+            cancelId: 1
+        })
+        if (response !== 0) return 'canceled'
+        persist() // 백업에 최신 상태가 들어가도록 먼저 저장
+        backupBeforeReset()
+        const now = new Date().toISOString()
+        pet = {...newSeed(), name: '', growthHistory: [{stage: 'seed', at: now, kind: 'start'}]}
+        collection = []
+        stats = EMPTY_STATS
+        status = {...status, gainedXp: 0}
+        persist()
+        broadcastState()
+        return 'reset'
+    } catch (err) {
+        console.error('초기화 실패:', err instanceof Error ? err.message : err)
         return 'error'
     }
 })

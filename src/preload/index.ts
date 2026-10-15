@@ -34,6 +34,7 @@ const api = {
     markOnboarded: (): Promise<void> => ipcRenderer.invoke('onboarding:done'),
     exportData: (): Promise<'saved' | 'canceled' | 'error'> => ipcRenderer.invoke('data:export'),
     importData: (): Promise<'loaded' | 'canceled' | 'error'> => ipcRenderer.invoke('data:import'),
+    resetData: (): Promise<'reset' | 'canceled' | 'error'> => ipcRenderer.invoke('data:reset'),
     dragStart: (): void => ipcRenderer.send('pet:dragStart'),
     dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),
     dragEnd: (): void => ipcRenderer.send('pet:dragEnd'),

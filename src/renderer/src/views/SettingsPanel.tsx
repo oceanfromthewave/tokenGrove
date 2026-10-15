@@ -9,6 +9,12 @@ const SPEEDS: Speed[] = ['slow', 'normal', 'fast']
 function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): React.JSX.Element {
     const [settings, update] = useSettings()
     const [note, setNote] = useState('')
+    const [resetNote, setResetNote] = useState('')
+    const reset = async (): Promise<void> => {
+        const result = await window.api.resetData()
+        setResetNote(result === 'reset' ? tr('처음부터 시작했어요') : result === 'error' ? tr('초기화하지 못했어요') : '')
+        if (result !== 'canceled') setTimeout(() => setResetNote(''), 3000)
+    }
     const run = async (job: 'export' | 'import'): Promise<void> => {
         const result = await (job === 'export' ? window.api.exportData() : window.api.importData())
         setNote(result === 'saved' ? tr('데이터를 내보냈어요') : result === 'loaded' ? tr('데이터를 불러왔어요') : result === 'error' ? tr('파일을 처리하지 못했어요') : '')
@@ -69,6 +75,15 @@ function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): R
                 <div className="seg">
                     <button onClick={() => void run('export')}>{tr('내보내기')}</button>
                     <button onClick={() => void run('import')}>{tr('불러오기')}</button>
+                </div>
+            </div>
+            <div className="set-row">
+                <span>
+                    <b>{tr('처음부터 다시 시작')}</b>
+                    <small>{resetNote || tr('지금 식물, 도감, 통계를 지우고 새 씨앗부터 시작해요 (설정은 유지)')}</small>
+                </span>
+                <div className="seg">
+                    <button onClick={() => void reset()}>{tr('초기화')}</button>
                 </div>
             </div>
             <div className="set-row">
