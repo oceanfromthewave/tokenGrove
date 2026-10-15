@@ -1,4 +1,4 @@
-import {SPEED_NAME, type Speed} from '../../../shared/settings'
+import {GOALS, SPEED_NAME, type Speed} from '../../../shared/settings'
 import {useSettings} from '../usePet'
 
 const SPEEDS: Speed[] = ['slow', 'normal', 'fast']
@@ -40,6 +40,19 @@ function SettingsPanel({tools}: { tools: { claude: number; codex: number } }): R
                 </span>
                 <input type="checkbox" checked={settings.updateCheck} onChange={(e) => update({updateCheck: e.target.checked})}/>
             </label>
+            <div className="set-row">
+                <span>
+                    <b>하루 목표</b>
+                    <small>오늘 모을 경험치 (달성하면 펫이 축하해요)</small>
+                </span>
+                <div className="seg">
+                    {GOALS.map((g) => (
+                        <button key={g} className={settings.dailyGoal === g ? 'on' : ''} onClick={() => update({dailyGoal: g})}>
+                            {g === 0 ? '끔' : g}
+                        </button>
+                    ))}
+                </div>
+            </div>
             <div className="set-row">
                 <span>
                     <b>성장 속도</b>

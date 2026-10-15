@@ -497,6 +497,9 @@ export function spriteOf(stage: StageId, species: SpeciesId): string[] {
     return outline(shade([...plantRows, ...mirror(POT)]))
 }
 
-export function paletteOf(species: SpeciesId): Record<string, string> {
-    return {...COMMON_COLORS, ...SPECIES_STYLE[species].colors}
+// gold: 모든 종을 완성한 보상으로 화분을 황금색으로 칠한다.
+const GOLD_POT = {P: '#ffe27a', p: '#e0b030', q: '#a67a12'}
+
+export function paletteOf(species: SpeciesId, gold = false): Record<string, string> {
+    return {...COMMON_COLORS, ...(gold ? GOLD_POT : {}), ...SPECIES_STYLE[species].colors}
 }

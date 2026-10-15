@@ -1087,3 +1087,101 @@ body,
   color: #ffe98a;
   text-align: right;
 }
+
+/* 펫 이름이 길면 말줄임 */
+.status {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 희귀도 표시 */
+.slot small {
+  display: block;
+  font-size: 10px;
+}
+
+.rar.common {
+  color: #b8c7bd;
+}
+
+.rar.uncommon {
+  color: #7fc8ff;
+}
+
+.rar.rare {
+  color: #ffd84d;
+  font-weight: 700;
+}
+
+/* 수집 오류, 하루 목표 */
+.warn-line {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #ffd27a;
+  background: #4a3a1c;
+  border-radius: 6px;
+}
+
+.goal {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.goal-text {
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.goal-fill {
+  background: #ffd84d;
+}
+
+/* 최근 사용량 그래프 */
+.chart {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: #2d5a3d;
+  border-radius: 8px;
+}
+
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 64px;
+  margin: 8px 0 4px;
+}
+
+.bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-col i {
+  display: block;
+  width: 100%;
+  min-height: 2px;
+  background: #8fd36b;
+}
+
+.bar-col i.today {
+  background: #ffd84d;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  opacity: 0.7;
+}

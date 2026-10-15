@@ -1,15 +1,15 @@
 import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
-import {formatXp, stageOf, xpToNextLevel} from '../../../shared/growth'
-import {pickChatter} from '../../../shared/chatter'
+import {formatXp, hasGoldPot, stageOf, xpToNextLevel} from '../../../shared/growth'
+import {onboardingLines, pickChatter} from '../../../shared/chatter'
 import {petEvent, type PetEvent} from '../../../shared/events'
-import {currentStreak, dateKey} from '../../../shared/stats'
-import {useGame} from '../usePet'
+import {crossedGoal, currentStreak, dateKey} from '../../../shared/stats'
+import {useGame, useSettings, useStatus} from '../usePet'
 
 interface Burst {
     id: number
-    kind: PetEvent
+    kind: PetEvent | 'goal' // goal = 오늘 목표 달성
     gain: number // 경험치 증가량 (xp 효과에만 사용)
 }
 
@@ -29,7 +29,15 @@ const SPARKS = Array.from({length: 8}, (_, i) => {
 })
 
 function PetView(): React.JSX.Element {
-    const {pet, stats, loaded} = useGame()
+    const {pet, stats, collection, onboarded, loaded} = useGame()
+    const status = useStatus()
+    const [settings] = useSettings()
+    const gold = hasGoldPot(collection)
+    const todayXp = stats.daily[dateKey(new Date())] ?? 0
+    const prevToday = useRef<number | null>(null)
+    const introLines = useRef<string[]>([])
+    const introDone = useRef(false)
+    const [introStep, setIntroStep] = useState<number | null>(null) // 첫 실행 안내 중인 줄 번호
     const stage = stageOf(pet.level)
     const drag = useRef<{ x: number; y: number } | null>(null) // 끌기 시작 시 마우스 화면 좌표
     const prev = useRef<typeof pet | null>(null)
@@ -44,6 +52,35 @@ function PetView(): React.JSX.Element {
         const kind = before ? petEvent(before, pet) : null
         if (before && kind) setBurst({id: Date.now(), kind, gain: pet.xp - before.xp})
     }, [pet, loaded])
+
+    // 오늘 경험치가 하루 목표를 넘는 순간에 축하한다. (처음 받아온 값은 비교 대상이 없어 무시)
+    useEffect(() => {
+        if (!loaded) return
+        const before = prevToday.current
+        prevToday.current = todayXp
+        if (before !== null && crossedGoal(before, todayXp, settings.dailyGoal)) setBurst({id: Date.now(), kind: 'goal', gain: 0})
+    }, [todayXp, loaded, settings.dailyGoal])
+
+    // 첫 실행이면 첫 로그 확인이 끝난 뒤(도구를 찾았는지 알 수 있을 때) 펫이 차례로 안내한다.
+    useEffect(() => {
+        if (!loaded || onboarded || introDone.current || introStep !== null || status.lastCheckedAt === null) return
+        introLines.current = onboardingLines(status.tools)
+        setIntroStep(0)
+    }, [loaded, onboarded, introStep, status.lastCheckedAt, status.tools])
+
+    useEffect(() => {
+        if (introStep === null) return
+        const t = setTimeout(() => {
+            if (introStep + 1 >= introLines.current.length) {
+                introDone.current = true
+                setIntroStep(null)
+                void window.api.markOnboarded()
+            } else {
+                setIntroStep(introStep + 1)
+            }
+        }, 3800)
+        return () => clearTimeout(t)
+    }, [introStep])
 
     useEffect(() => {
         if (!burst) return
@@ -87,7 +124,7 @@ function PetView(): React.JSX.Element {
             <div className="stage-box">
                 <div key={big ? burst.id : 'still'} className={`sprite${big ? ' pop' : ''}`}>
                     <div className="idle">
-                        <PetSprite stage={stage.id} species={pet.species}/>
+                        <PetSprite stage={stage.id} species={pet.species} gold={gold}/>
                     </div>
                 </div>
                 {big && SPARKS.map((s, i) => (
@@ -95,11 +132,14 @@ function PetView(): React.JSX.Element {
                 ))}
                 {big && (
                     <div key={`b${burst.id}`} className="banner">
-                        {burst.kind === 'newSeed' ? '새 씨앗!' : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
+                        {burst.kind === 'goal' ? '오늘 목표 달성!' : burst.kind === 'newSeed' ? '새 씨앗!' : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
                     </div>
                 )}
                 {chat && (
                     <div key={`c${chat.id}`} className="bubble">{chat.text}</div>
+                )}
+                {!chat && introStep !== null && (
+                    <div key={`i${introStep}`} className="bubble">{introLines.current[introStep]}</div>
                 )}
                 {chat && [0, 1, 2].map((i) => (
                     <span
@@ -113,7 +153,7 @@ function PetView(): React.JSX.Element {
                 {burst?.kind === 'xp' && <div key={`g${burst.id}`} className="gain">+{formatXp(burst.gain)}</div>}
             </div>
             <div className="plate">
-                <div className="status">{stage.name} Lv.{pet.level}</div>
+                <div className="status" title={pet.name || undefined}>{pet.name ? `${pet.name} · ` : ''}{stage.name} Lv.{pet.level}</div>
                 <div className="xpbar" title={`${formatXp(pet.xp)} / ${xpToNextLevel(pet.level)} XP`}>
                     <i style={{width: `${Math.min(100, (pet.xp / xpToNextLevel(pet.level)) * 100)}%`}}/>
                 </div>

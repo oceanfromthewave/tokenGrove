@@ -80,3 +80,14 @@ export function etaDays(pet: PetState, stats: Stats, now: Date): number | null {
     const avg = avgDaily(stats, now)
     return remain === null || avg <= 0 ? null : Math.ceil(remain / avg)
 }
+
+// 최근 n일(오늘 포함)의 날짜별 경험치. 오래된 날부터 오늘 순서이고, 쉬는 날은 0이다.
+export function recentDays(stats: Stats, now: Date, n: number): { key: string; xp: number }[] {
+    return Array.from({length: n}, (_, i) => {
+        const key = dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - (n - 1 - i)))
+        return {key, xp: stats.daily[key] ?? 0}
+    })
+}
+
+// 오늘 얻은 경험치가 목표를 처음 넘은 순간인가. (목표 0 = 끔)
+export const crossedGoal = (before: number, after: number, goal: number): boolean => goal > 0 && before < goal && after >= goal

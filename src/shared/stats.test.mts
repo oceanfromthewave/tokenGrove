@@ -1,7 +1,7 @@
 // 실행: npm test
 import assert from 'node:assert/strict'
 import {INITIAL_PET} from './growth.ts'
-import {EMPTY_STATS, avgDaily, cumulativeXp, currentStreak, dateKey, etaDays, recordGain, streakEndingAt, weatherOf, xpToNextStage} from './stats.ts'
+import {EMPTY_STATS, crossedGoal, recentDays, avgDaily, cumulativeXp, currentStreak, dateKey, etaDays, recordGain, streakEndingAt, weatherOf, xpToNextStage} from './stats.ts'
 
 const day = (y: number, m: number, d: number): Date => new Date(y, m - 1, d, 12)
 
@@ -60,5 +60,17 @@ assert.equal(weatherOf(50, 100), 'sunny')
 assert.equal(weatherOf(150, 100), 'rainbow')
 assert.equal(weatherOf(5, 0), 'sunny')
 assert.equal(weatherOf(NaN, 100), 'overcast')
+
+// 최근 N일: 오래된 날부터 오늘까지, 쉬는 날은 0, 월 경계, 개수
+const rd = recentDays({totalXp: 0, daily: {'2026-02-28': 5, '2026-03-01': 7}, bestStreak: 0}, day(2026, 3, 2), 4)
+assert.deepEqual(rd.map((d) => d.key), ['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-02'])
+assert.deepEqual(rd.map((d) => d.xp), [0, 5, 7, 0])
+assert.equal(recentDays(EMPTY_STATS, day(2026, 3, 2), 30).length, 30)
+
+// 목표 달성 순간: 넘는 순간만, 이미 넘은 뒤/못 미침/목표 끔은 false
+assert.equal(crossedGoal(90, 105, 100), true)
+assert.equal(crossedGoal(100, 120, 100), false)
+assert.equal(crossedGoal(10, 99.9, 100), false)
+assert.equal(crossedGoal(0, 1000, 0), false)
 
 console.log('stats: all checks passed')

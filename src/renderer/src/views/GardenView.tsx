@@ -2,11 +2,12 @@ import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import PixelArt from '../components/PixelArt'
 import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
-import {SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
+import {RARITY, hasGoldPot, SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
 import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
 import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
-import {useGame, useStatus} from '../usePet'
+import {useGame, useSettings, useStatus} from '../usePet'
 import SettingsPanel from './SettingsPanel'
+import UsageChart from './UsageChart'
 import SpeciesDetail from './SpeciesDetail'
 
 // 칸 단위로 만든 무지개 (한 번만 계산)
@@ -71,6 +72,8 @@ function GardenView(): React.JSX.Element {
         setTimeout(() => setToast(''), 2500)
     }
     const stage = stageOf(pet.level)
+    const [settings] = useSettings()
+    const gold = hasGoldPot(collection) // 모든 종을 완성하면 황금 화분
     const nextStage = STAGES.find((s) => s.minLevel > stage.minLevel)
     const need = xpToNextLevel(pet.level)
     const now = new Date()
@@ -124,7 +127,7 @@ function GardenView(): React.JSX.Element {
                 <div className="fence"/>
                 <div className="grass"/>
                 <div className="scene-pet">
-                    <PetSprite stage={stage.id} species={pet.species} scale={9}/>
+                    <PetSprite stage={stage.id} species={pet.species} scale={9} gold={gold}/>
                 </div>
                 {DECOR_SPOTS.map((d, i) => (
                     <div key={i} className="decor" style={{left: `${d.x}%`, bottom: d.y}}>
@@ -180,7 +183,16 @@ function GardenView(): React.JSX.Element {
                         : `마지막 확인 ${new Date(status.lastCheckedAt).toLocaleTimeString()} · 이번 실행 +${formatXp(status.gainedXp)} XP`}
                 </div>
 
-                <h2>도감 {owned.size}/{SPECIES.length}</h2>
+                {status.error && <div className="warn-line">{status.error}</div>}
+                {settings.dailyGoal > 0 && (
+                    <div className="goal">
+                        <div className="goal-text">오늘 목표 {formatXp(Math.min(todayXp, settings.dailyGoal))} / {settings.dailyGoal} XP{todayXp >= settings.dailyGoal ? ' · 달성!' : ''}</div>
+                        <div className="bar"><div className="bar-fill goal-fill" style={{width: `${Math.min(100, (todayXp / settings.dailyGoal) * 100)}%`}}/></div>
+                    </div>
+                )}
+                <UsageChart stats={stats}/>
+
+                <h2>도감 {owned.size}/{SPECIES.length}{gold ? ' · 황금 화분 획득!' : ''}</h2>
                 <div className="shelf">
                     {SPECIES.map((sp) => {
                         const own = owned.get(sp.id)
@@ -192,8 +204,9 @@ function GardenView(): React.JSX.Element {
                                 onClick={() => setSelected(selected === sp.id ? null : sp.id)}
                                 title={own ? sp.name : '아직 만나지 못한 식물'}
                             >
-                                <PetSprite stage="tree" species={sp.id} scale={3}/>
+                                <PetSprite stage="tree" species={sp.id} scale={3} gold={gold}/>
                                 <span>{own ? sp.name : '???'}</span>
+                                <small className={`rar ${sp.rarity}`}>{RARITY[sp.rarity].name}</small>
                                 {own && own.count > 1 && <em>×{own.count}</em>}
                             </button>
                         )

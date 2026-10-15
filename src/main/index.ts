@@ -1,6 +1,7 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
 import {writeFile} from 'fs/promises'
 import {join} from 'path'
+import {fallbackPos, fitsInAny} from '../shared/windowPos'
 import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
 import {parseRect} from '../shared/exportRect'
@@ -23,7 +24,8 @@ let stats: Stats = EMPTY_STATS // 로그에서 얻은 경험치 통계 (테스�
 let processed: string[] = [] // 이미 반영한 사용 기록 키
 let logOffsets: Offsets | null = null // Claude Code 로그 읽은 위치
 let settings: Settings = DEFAULT_SETTINGS
-let status: CollectStatus = {lastCheckedAt: null, gainedXp: 0, tools: {claude: 0, codex: 0}}
+let status: CollectStatus = {lastCheckedAt: null, gainedXp: 0, tools: {claude: 0, codex: 0}, error: null}
+let onboarded = true // 첫 실행 안내를 봤는지
 let petPos: { x: number; y: number } | null = null
 let gardenWin: BrowserWindow | null = null
 let petWin: BrowserWindow | null = null
@@ -45,13 +47,22 @@ function loadView(win: BrowserWindow, view: 'pet' | 'garden'): void {
 // 저장된 위치가 현재 연결된 모니터 안에 있을 때만 사용한다. (모니터 구성이 바뀐 경우 화면 밖 방지)
 function visiblePos(pos: { x: number; y: number } | null, w: number, h: number): { x: number; y: number } | undefined {
     if (!pos) return undefined
-    const inside = screen.getAllDisplays().some(({workArea: a}) =>
-        pos.x >= a.x && pos.y >= a.y && pos.x + w <= a.x + a.width && pos.y + h <= a.y + a.height)
-    return inside ? pos : undefined
+    return fitsInAny({...pos, width: w, height: h}, screen.getAllDisplays().map((d) => d.workArea)) ? pos : undefined
+}
+
+// 모니터를 뽑거나 해상도/배율이 바뀌어 펫 창이 화면 밖에 남으면 주 모니터 오른쪽 아래로 옮긴다.
+function ensureOnScreen(): void {
+    if (!petWin || petWin.isDestroyed()) return
+    const box = petWin.getBounds()
+    if (fitsInAny(box, screen.getAllDisplays().map((d) => d.workArea))) return
+    const {x, y} = fallbackPos(box, screen.getPrimaryDisplay().workArea)
+    petWin.setPosition(x, y)
+    petPos = {x, y}
+    persist()
 }
 
 function persist(): void {
-    writeSave({pet, petWindow: petPos, processed, collection, stats, settings, skippedVersion, logOffsets})
+    writeSave({pet, petWindow: petPos, processed, collection, stats, settings, onboarded, skippedVersion, logOffsets})
 }
 
 // 새 버전 확인. GitHub의 '최신 릴리스' 정보만 받아오고(사용 기록 등은 보내지 않는다), 새 버전이면 물어본다.
@@ -186,7 +197,7 @@ function openGarden(): void {
     gardenWin.on('closed', () => (gardenWin = null))
 }
 
-const getState = (): { pet: PetState; collection: Completed[]; stats: Stats } => ({pet, collection, stats})
+const getState = (): { pet: PetState; collection: Completed[]; stats: Stats; onboarded: boolean } => ({pet, collection, stats, onboarded})
 
 function broadcastState(): void {
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('state:changed', getState())
@@ -222,6 +233,10 @@ ipcMain.handle('pet:setName', (_e, value: unknown) => {
     return getState()
 })
 ipcMain.handle('status:get', () => status)
+ipcMain.handle('onboarding:done', () => {
+    onboarded = true
+    persist()
+})
 ipcMain.handle('settings:get', () => settings)
 ipcMain.handle('settings:set', (_e, patch: unknown) => {
     settings = mergeSettings(settings, patch) // 알려진 항목과 형식만 받아들인다
@@ -268,6 +283,18 @@ const hasBaseline = (offsets: Offsets, root: string): boolean => Object.keys(off
 
 // Claude Code와 Codex 로그에서 새 사용 기록을 읽어 반영한다. 첫 확인은 기준선만 잡고 과거 기록은 보상하지 않는다.
 function pollLogs(): void {
+    try {
+        pollLogsOnce()
+        if (status.error) status = {...status, error: null}
+    } catch (err) {
+        // 내용은 담지 않고 짧은 설명만 보여준다 (프롬프트 등이 섞여 나오지 않게)
+        console.error('로그 읽기 실패:', err instanceof Error ? err.message : err)
+        status = {...status, lastCheckedAt: Date.now(), error: '로그를 읽는 중 문제가 생겼어요. 다음 확인 때 다시 시도해요.'}
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('status:changed', status)
+    }
+}
+
+function pollLogsOnce(): void {
     const first = logOffsets === null
     const known = logOffsets ?? {}
     const claudeRoot = defaultClaudeRoot()
@@ -286,7 +313,8 @@ function pollLogs(): void {
     status = {
         lastCheckedAt: Date.now(),
         gainedXp: status.gainedXp + gained,
-        tools: {claude: Object.keys(claude.offsets).length, codex: Object.keys(codex.offsets).length}
+        tools: {claude: Object.keys(claude.offsets).length, codex: Object.keys(codex.offsets).length},
+        error: null
     }
     for (const w of BrowserWindow.getAllWindows()) w.webContents.send('status:changed', status)
 }
@@ -359,12 +387,15 @@ app.whenReady().then(() => {
     stats = save.stats
     settings = save.settings
     skippedVersion = save.skippedVersion
+    onboarded = save.onboarded
     processed = save.processed
     logOffsets = save.logOffsets
     petPos = save.petWindow
     settle() // 저장된 레벨이 이미 완성 기준을 넘었으면 바로 정원에 보관
     createPetWindow()
     createTray()
+    screen.on('display-removed', ensureOnScreen)
+    screen.on('display-metrics-changed', ensureOnScreen)
     pollLogs()
     setInterval(pollLogs, POLL_MS)
     setTimeout(() => void checkForUpdate(false), 15_000) // 시작 직후에는 펫이 자리 잡도록 잠깐 기다린다

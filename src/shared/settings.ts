@@ -7,12 +7,15 @@ export interface Settings {
     notifications: boolean // 단계 성장/식물 완성 알림
     updateCheck: boolean // 새 버전이 있는지 GitHub에 물어보기
     speed: Speed // 성장 속도 (경험치 환산 배율)
+    dailyGoal: number // 하루 목표 경험치 (0 = 끔)
 }
 
-export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, updateCheck: true, speed: 'normal'}
+export const DEFAULT_SETTINGS: Settings = {claude: true, codex: true, notifications: true, updateCheck: true, speed: 'normal', dailyGoal: 100}
 
 // 경험치 환산 배율. 사용량이 적은 사람은 빠르게, 많은 사람은 느리게 고를 수 있다.
 export const SPEED_MULTIPLIER: Record<Speed, number> = {slow: 0.5, normal: 1, fast: 2}
+
+export const GOALS = [0, 50, 100, 200, 500] as const // 고를 수 있는 하루 목표
 
 export const SPEED_NAME: Record<Speed, string> = {slow: '느리게', normal: '보통', fast: '빠르게'}
 
@@ -28,7 +31,8 @@ export function mergeSettings(current: Settings, patch: unknown): Settings {
         codex: typeof own('codex') === 'boolean' ? (own('codex') as boolean) : current.codex,
         notifications: typeof own('notifications') === 'boolean' ? (own('notifications') as boolean) : current.notifications,
         updateCheck: typeof own('updateCheck') === 'boolean' ? (own('updateCheck') as boolean) : current.updateCheck,
-        speed: isSpeed(own('speed')) ? (own('speed') as Speed) : current.speed
+        speed: isSpeed(own('speed')) ? (own('speed') as Speed) : current.speed,
+        dailyGoal: (GOALS as readonly unknown[]).includes(own('dailyGoal')) ? (own('dailyGoal') as number) : current.dailyGoal
     }
 }
 

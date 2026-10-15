@@ -1,6 +1,6 @@
 // 실행: npm test  (Node가 TypeScript를 직접 실행, 별도 테스트 도구 없음)
 import assert from 'node:assert/strict'
-import {HARVEST_LEVEL, INITIAL_PET, SPECIES, STAGES, addXp, harvestIfReady, newSeed, stageOf, xpToNextLevel} from './growth.ts'
+import {RARITY, hasGoldPot, HARVEST_LEVEL, INITIAL_PET, SPECIES, STAGES, addXp, harvestIfReady, newSeed, stageOf, xpToNextLevel} from './growth.ts'
 
 const P = (level: number, xp: number) => ({...INITIAL_PET, level, xp}) // 같은 종으로 비교용
 
@@ -43,7 +43,26 @@ assert.equal(addXp({...INITIAL_PET, species: 'tulip'}, 250).species, 'tulip')
 assert.deepEqual(newSeed(() => 0), {level: 1, xp: 0, species: SPECIES[0].id})
 assert.equal(newSeed(() => 0.999).species, SPECIES[SPECIES.length - 1].id)
 assert.equal(newSeed(() => 1).species, SPECIES[SPECIES.length - 1].id)
-assert.deepEqual(new Set(SPECIES.map((_, i) => newSeed(() => i / SPECIES.length).species)).size, SPECIES.length)
+// 모든 종이 나올 수 있다: 각 종의 가중치 구간 한가운데 값으로 뽑으면 그 종이 나온다
+{
+    const total = SPECIES.reduce((sum, sp) => sum + RARITY[sp.rarity].weight, 0)
+    let from = 0
+    for (const sp of SPECIES) {
+        const w = RARITY[sp.rarity].weight
+        assert.equal(newSeed(() => (from + w / 2) / total).species, sp.id, sp.id)
+        from += w
+    }
+    // 흔한 종이 희귀한 종보다 확률이 높다: 10000번 뽑아서 비율 확인(고정된 난수열)
+    let seed = 12345
+    const lcg = (): number => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
+    const count: Record<string, number> = {}
+    for (let i = 0; i < 10000; i++) {
+        const id = newSeed(lcg).species
+        count[id] = (count[id] ?? 0) + 1
+    }
+    assert.ok(count.daisy > count.sunflower && count.sunflower > count.rose, JSON.stringify(count))
+}
+assert.equal(newSeed(() => NaN).level, 1) // 이상한 난수에도 안전
 
 // 완성: 기준 전에는 그대로, 도달하면 정원에 보관하고 새 씨앗
 const old = {...INITIAL_PET, species: 'tulip' as const}
@@ -52,5 +71,11 @@ assert.equal(before2.collection.length, 0)
 const done = harvestIfReady({...old, level: HARVEST_LEVEL, xp: 5}, [], 'T', () => 0)
 assert.deepEqual(done.collection, [{species: 'tulip', completedAt: 'T'}])
 assert.deepEqual(done.pet, {level: 1, xp: 0, species: SPECIES[0].id})
+
+// 황금 화분: 모든 종을 한 번씩 완성했을 때만
+const allDone = SPECIES.map((sp) => ({species: sp.id, completedAt: 'T'}))
+assert.equal(hasGoldPot(allDone), true)
+assert.equal(hasGoldPot(allDone.slice(1)), false)
+assert.equal(hasGoldPot([...allDone.slice(1), allDone[1]]), false) // 같은 종 중복은 인정 안 됨
 
 console.log('growth: all checks passed')

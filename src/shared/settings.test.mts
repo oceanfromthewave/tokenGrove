@@ -25,4 +25,10 @@ assert.equal('evil' in next, false)
 assert.equal(SPEED_MULTIPLIER.normal, 1)
 assert.ok(SPEED_MULTIPLIER.slow < 1 && SPEED_MULTIPLIER.fast > 1)
 
+// 하루 목표: 정해진 값만, 나머지는 현재 값 유지
+assert.equal(DEFAULT_SETTINGS.dailyGoal, 100)
+assert.equal(parseSettings({dailyGoal: 200}).dailyGoal, 200)
+assert.equal(parseSettings({dailyGoal: 0}).dailyGoal, 0)
+for (const bad of [-1, 77, '100', NaN, null]) assert.equal(parseSettings({dailyGoal: bad}).dailyGoal, 100)
+
 console.log('settings: all checks passed')

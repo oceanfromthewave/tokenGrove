@@ -68,6 +68,9 @@ export function chatterLines(ctx: ChatterContext): string[] {
     if (ctx.weekday !== undefined && WEEKDAY_LINE[ctx.weekday]) lines.push(WEEKDAY_LINE[ctx.weekday])
     if (ctx.pet.level >= 7 && SPECIES.some((s) => s.id === ctx.pet.species)) lines.push(BY_SPECIES[ctx.pet.species])
 
+    // 이름을 붙여 줬다면 이름을 부른다
+    if (ctx.pet.name) lines.push(`저를 "${ctx.pet.name}"(이)라고 불러 줘서 고마워요`, `${ctx.pet.name}, 오늘도 잘 자라고 있어요`)
+
     // 아무 때나 해도 어울리는 말
     lines.push('쓰다듬어 줘서 고마워요', '물은 충분해요!')
     return lines
@@ -77,4 +80,16 @@ export function chatterLines(ctx: ChatterContext): string[] {
 export function pickChatter(ctx: ChatterContext, rand: () => number = Math.random): string {
     const lines = chatterLines(ctx)
     return lines[Math.min(Math.floor(rand() * lines.length), lines.length - 1)]
+}
+
+// 첫 실행 때 펫이 차례로 하는 안내. 도구를 하나도 못 찾았으면 마지막에 알려 준다.
+export function onboardingLines(tools: { claude: number; codex: number }): string[] {
+    const lines = [
+        '안녕하세요! 저는 씨앗이에요',
+        'Claude Code나 Codex를 쓰면 쑥쑥 자라요',
+        '클릭하면 말을 걸 수 있어요. 우클릭은 메뉴예요',
+        '정원 버튼에서 도감과 기록을 볼 수 있어요'
+    ]
+    if (tools.claude + tools.codex === 0) lines.push('아직 Claude Code나 Codex 기록을 못 찾았어요. 쓰기 시작하면 자라요!')
+    return lines
 }

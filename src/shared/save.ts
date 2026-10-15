@@ -11,11 +11,12 @@ export interface SaveData {
     collection: Completed[] // 완성되어 정원에 보관된 식물
     stats: Stats // 경험치 통계
     settings: Settings // 사용자 설정
+    onboarded: boolean // 첫 실행 안내를 이미 봤는지
     skippedVersion: string | null // "이 버전 건너뛰기"를 누른 업데이트 버전
     logOffsets: Record<string, number> | null // Claude Code 로그별 읽은 위치. null = 아직 기준선 없음(첫 실행)
 }
 
-export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, settings: DEFAULT_SETTINGS, skippedVersion: null, logOffsets: null}
+export const EMPTY_SAVE: SaveData = {pet: INITIAL_PET, petWindow: null, processed: [], collection: [], stats: EMPTY_STATS, settings: DEFAULT_SETTINGS, onboarded: false, skippedVersion: null, logOffsets: null}
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const parseName = (v: unknown): string | undefined => typeof v === 'string' ? v.trim().slice(0, 24) : undefined
@@ -86,7 +87,7 @@ export function parseSave(text: string): SaveData {
             ...(name !== undefined ? {name} : {}),
             ...(growthHistory !== undefined ? {growthHistory} : {})
         }
-        return {pet, petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), skippedVersion: parseVersion(raw.skippedVersion) ? (raw.skippedVersion as string).replace(/^v/, '') : null, logOffsets}
+        return {pet, petWindow, processed, collection, stats: {totalXp, daily, bestStreak}, settings: parseSettings(raw.settings), onboarded: raw.onboarded !== false, skippedVersion: parseVersion(raw.skippedVersion) ? (raw.skippedVersion as string).replace(/^v/, '') : null, logOffsets}
     } catch {
         return EMPTY_SAVE
     }

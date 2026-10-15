@@ -8,6 +8,7 @@ export interface AppState {
     pet: PetState
     collection: Completed[]
     stats: Stats
+    onboarded: boolean
 }
 
 // 렌더러에 노출할 기능은 여기 적힌 것뿐이다. (ipcRenderer 자체는 노출하지 않는다)
@@ -30,6 +31,7 @@ const api = {
     },
     exportGarden: (rect: { x: number; y: number; width: number; height: number }): Promise<'saved' | 'canceled' | 'error'> =>
         ipcRenderer.invoke('garden:export', rect),
+    markOnboarded: (): Promise<void> => ipcRenderer.invoke('onboarding:done'),
     dragStart: (): void => ipcRenderer.send('pet:dragStart'),
     dragMove: (dx: number, dy: number): void => ipcRenderer.send('pet:dragMove', dx, dy),
     dragEnd: (): void => ipcRenderer.send('pet:dragEnd'),

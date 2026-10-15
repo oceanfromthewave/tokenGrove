@@ -2,17 +2,26 @@
 
 // 식물 종. 새 씨앗이 시작될 때 무작위로 정해진다.
 export const SPECIES = [
-    {id: 'daisy', name: '데이지'},
-    {id: 'sunflower', name: '해바라기'},
-    {id: 'tulip', name: '튤립'},
-    {id: 'bellflower', name: '도라지'},
-    {id: 'rose', name: '장미'},
-    {id: 'lavender', name: '라벤더'},
-    {id: 'hydrangea', name: '수국'},
-    {id: 'poppy', name: '양귀비'},
-    {id: 'cosmos', name: '코스모스'},
-    {id: 'cherry', name: '벚꽃'}
+    {id: 'daisy', name: '데이지', rarity: 'common'},
+    {id: 'sunflower', name: '해바라기', rarity: 'uncommon'},
+    {id: 'tulip', name: '튤립', rarity: 'common'},
+    {id: 'bellflower', name: '도라지', rarity: 'common'},
+    {id: 'rose', name: '장미', rarity: 'rare'},
+    {id: 'lavender', name: '라벤더', rarity: 'uncommon'},
+    {id: 'hydrangea', name: '수국', rarity: 'uncommon'},
+    {id: 'poppy', name: '양귀비', rarity: 'uncommon'},
+    {id: 'cosmos', name: '코스모스', rarity: 'common'},
+    {id: 'cherry', name: '벚꽃', rarity: 'rare'}
 ] as const
+
+// 희귀도: 새 씨앗이 이 종일 확률의 가중치. (흔함 4종 40 + 드묾 4종 24 + 희귀 2종 6 = 70 -> 희귀 종 하나당 약 4.3%)
+export const RARITY = {
+    common: {name: '흔함', weight: 10},
+    uncommon: {name: '드묾', weight: 6},
+    rare: {name: '희귀', weight: 3}
+} as const
+
+export type Rarity = keyof typeof RARITY
 
 export type SpeciesId = (typeof SPECIES)[number]['id']
 
@@ -49,8 +58,13 @@ export const HARVEST_LEVEL = 11
 
 // 새 씨앗. rand는 테스트에서 값을 고정하려고 바꿀 수 있다.
 export function newSeed(rand: () => number = Math.random): PetState {
-    const i = Math.min(Math.floor(rand() * SPECIES.length), SPECIES.length - 1)
-    return {level: 1, xp: 0, species: SPECIES[i].id}
+    const total = SPECIES.reduce((sum, sp) => sum + RARITY[sp.rarity].weight, 0)
+    let r = Math.min(Math.max(rand(), 0), 0.999999999) * total
+    for (const sp of SPECIES) {
+        r -= RARITY[sp.rarity].weight
+        if (r < 0) return {level: 1, xp: 0, species: sp.id}
+    }
+    return {level: 1, xp: 0, species: SPECIES[SPECIES.length - 1].id}
 }
 
 // 완성 조건을 넘었으면 정원에 보관하고 새 씨앗으로 바꾼다. 아니면 그대로 돌려준다.
@@ -111,3 +125,6 @@ export const isStageId = (v: unknown): v is StageId => STAGES.some((s) => s.id =
 export function stageOf(level: number): (typeof STAGES)[number] {
     return STAGES.findLast((s) => level >= s.minLevel) ?? STAGES[0]
 }
+
+// 모든 종을 한 번씩 완성하면 화분이 황금색이 된다.
+export const hasGoldPot = (collection: Completed[]): boolean => new Set(collection.map((c) => c.species)).size >= SPECIES.length

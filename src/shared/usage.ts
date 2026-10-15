@@ -53,6 +53,7 @@ export interface CollectStatus {
     lastCheckedAt: number | null // 마지막으로 로그를 확인한 시각(ms)
     gainedXp: number // 이번 실행 동안 로그에서 얻은 경험치
     tools: { claude: number; codex: number } // 도구별로 찾은 로그 파일 수 (0이면 로그 없음)
+    error: string | null // 로그를 읽다가 문제가 생겼으면 짧은 설명 (내용은 담지 않는다)
 }
 
 export interface UsageResult {

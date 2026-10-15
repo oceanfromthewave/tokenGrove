@@ -1,6 +1,6 @@
 // 실행: npm test
 import assert from 'node:assert/strict'
-import {chatterLines, pickChatter} from './chatter.ts'
+import {chatterLines, onboardingLines, pickChatter} from './chatter.ts'
 import {INITIAL_PET, SPECIES, STAGES} from './growth.ts'
 
 const ctx = (o = {}) => ({pet: INITIAL_PET, todayXp: 0, streak: 0, hour: 14, ...o})
@@ -54,5 +54,17 @@ const lines = chatterLines(c)
 assert.equal(pickChatter(c, () => 0), lines[0])
 assert.equal(pickChatter(c, () => 0.999999), lines[lines.length - 1])
 assert.equal(pickChatter(c, () => 1), lines[lines.length - 1])
+
+// 이름을 붙였다면 이름을 부르는 말이 있고, 없으면 없다
+const named = chatterLines(ctx({pet: {...INITIAL_PET, name: '꽃순이'}}))
+assert.ok(named.some((l) => l.includes('꽃순이')))
+assert.ok(!chatterLines(ctx()).some((l) => l.includes('꽃순이')))
+assert.ok(!chatterLines(ctx({pet: {...INITIAL_PET, name: ''}})).some((l) => l.includes('""')))
+
+// 첫 실행 안내: 도구를 찾았으면 기본 안내, 못 찾았으면 마지막에 안내가 하나 더
+assert.equal(onboardingLines({claude: 3, codex: 0}).length, 4)
+const none = onboardingLines({claude: 0, codex: 0})
+assert.equal(none.length, 5)
+assert.ok(none[4].includes('못 찾았어요'))
 
 console.log('chatter: all checks passed')
