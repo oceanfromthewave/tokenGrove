@@ -3,7 +3,7 @@ import PetSprite from '../components/PetSprite'
 import {tr} from '../../../shared/i18n'
 import PixelArt from '../components/PixelArt'
 import {DECOR, DECOR_COLORS, MOON_COLORS, RAINBOW_COLORS, moonRows, rainbowRows, type DecorId} from '../../../shared/decor'
-import {RARITY, hasGoldPot, SPECIES, STAGES, formatXp, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
+import {RARITY, hasGoldPot, SPECIES, STAGES, formatXp, stageName, stageOf, xpToNextLevel, type SpeciesId} from '../../../shared/growth'
 import {ACHIEVEMENTS, achieved} from '../../../shared/achievements'
 import {avgDaily, currentStreak, dateKey, etaDays, weatherOf, type Weather} from '../../../shared/stats'
 import {useGame, useSettings, useStatus} from '../usePet'
@@ -158,7 +158,7 @@ function GardenView(): React.JSX.Element {
             <div className="panel">
                 <div className="name-row">
                     <div className="garden-heading">
-                        <div className="garden-name">{stage.name} · Lv.{pet.level}</div>
+                        <div className="garden-name">{stageName(stage.id, pet.species)} · Lv.{pet.level}</div>
                     </div>
                     <button className="photo-btn" onClick={savePhoto}>{tr('사진 저장')}</button>
                 </div>
@@ -185,7 +185,7 @@ function GardenView(): React.JSX.Element {
                     <div><b>{tr('{n}일', {n: streak})}</b><span>{tr('연속 사용')}</span></div>
                     <div>
                         <b>{nextStage ? (eta === null ? '-' : tr('{n}일', {n: eta})) : tr('최종')}</b>
-                        <span>{nextStage ? tr('{stage}까지', {stage: nextStage.name}) : tr('단계')}</span>
+                        <span>{nextStage ? tr('{stage}까지', {stage: stageName(nextStage.id, pet.species)}) : tr('단계')}</span>
                     </div>
                 </div>
                 <div className="bar-label">
@@ -234,7 +234,7 @@ function GardenView(): React.JSX.Element {
                 {selected && picked && (
                     <SpeciesDetail key={selected} species={selected} count={picked.count} lastAt={picked.lastAt} plants={selectedPlants}/>
                 )}
-                {collection.length === 0 && <p className="empty">{tr('큰 나무까지 키워 완성하면 이곳에 심어져요.')}</p>}
+                {collection.length === 0 && <p className="empty">{tr('끝까지 키워 완성하면 이곳에 심어져요.')}</p>}
 
                 <h2>{tr('업적 {n}/{total}', {n: got.size, total: ACHIEVEMENTS.length})}</h2>
                 <div className="badges">
@@ -252,7 +252,7 @@ function GardenView(): React.JSX.Element {
                         const markStage = STAGES.find((s) => s.id === mark.stage)
                         return (
                             <li key={`${mark.at}-${mark.stage}-${i}`}>
-                                <b>{markStage?.name ?? mark.stage}</b>
+                                <b>{stageName(mark.stage, pet.species)}</b>
                                 <time>{mark.kind === 'start' ? tr('기록 시작 · ') : ''}{new Date(mark.at).toLocaleString()}</time>
                             </li>
                         )
@@ -262,7 +262,7 @@ function GardenView(): React.JSX.Element {
                 <ul className="stages">
                     {STAGES.map((s) => (
                         <li key={s.id} className={pet.level >= s.minLevel ? 'done' : 'locked'}>
-                            {s.name} <span>{pet.level >= s.minLevel ? '✓' : `Lv.${s.minLevel}`}</span>
+                            {stageName(s.id, pet.species)} <span>{pet.level >= s.minLevel ? '✓' : `Lv.${s.minLevel}`}</span>
                         </li>
                     ))}
                 </ul>

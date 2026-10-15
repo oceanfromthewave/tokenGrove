@@ -13,7 +13,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     {id: 'first', get name() { return tr('첫 열매') }, get desc() { return tr('식물을 처음 완성했어요') }},
     {id: 'five', get name() { return tr('정원사') }, get desc() { return tr('서로 다른 5종을 완성했어요') }},
     {id: 'all', get name() { return tr('식물 박사') }, get desc() { return tr('모든 종을 완성했어요') }},
-    {id: 'tree', get name() { return tr('큰 나무') }, get desc() { return tr('식물을 큰 나무 단계까지 키웠어요') }},
+    {id: 'tree', get name() { return tr('다 자란 식물') }, get desc() { return tr('식물을 마지막 성장 단계까지 키웠어요') }},
     {id: 'xp1k', get name() { return tr('새싹 토큰러') }, get desc() { return tr('누적 1,000 XP') }},
     {id: 'xp10k', get name() { return tr('숲의 주민') }, get desc() { return tr('누적 10,000 XP') }},
     {id: 'xp100k', get name() { return tr('숲의 주인') }, get desc() { return tr('누적 100,000 XP') }},

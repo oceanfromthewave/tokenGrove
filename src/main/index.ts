@@ -3,7 +3,7 @@ import {readFile, stat, writeFile} from 'fs/promises'
 import {autoUpdater} from 'electron-updater'
 import {join} from 'path'
 import {fallbackPos, fitsInAny} from '../shared/windowPos'
-import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageOf, type Completed, type PetState} from '../shared/growth'
+import {INITIAL_PET, SPECIES, STAGES, harvestIfReady, newSeed, stageName, stageOf, type Completed, type PetState} from '../shared/growth'
 import {petEvent} from '../shared/events'
 import {resolveLang, setLang, tr} from '../shared/i18n'
 import {parseRect} from '../shared/exportRect'
@@ -306,7 +306,7 @@ function notifyGrowth(before: PetState): void {
     if (!settings.notifications || (kind !== 'stage' && kind !== 'newSeed') || !Notification.isSupported()) return
     const name = (id: string): string => SPECIES.find((s) => s.id === id)?.name ?? ''
     if (kind === 'stage') {
-        new Notification({title: tr('{stage} 단계가 됐어요', {stage: stageOf(pet.level).name}), body: tr('{name}이(가) 쑥쑥 자라고 있어요', {name: name(pet.species)})}).show()
+        new Notification({title: tr('{stage} 단계가 됐어요', {stage: stageName(stageOf(pet.level).id, pet.species)}), body: tr('{name}이(가) 쑥쑥 자라고 있어요', {name: name(pet.species)})}).show()
     } else {
         new Notification({title: tr('식물을 완성했어요!'), body: tr('{name}이(가) 정원 도감에 심어졌고, 새 씨앗이 시작됐어요', {name: name(before.species)})}).show()
     }

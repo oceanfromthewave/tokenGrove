@@ -1,6 +1,6 @@
 // 실행: npm test  (Node가 TypeScript를 직접 실행, 별도 테스트 도구 없음)
 import assert from 'node:assert/strict'
-import {RARITY, hasGoldPot, HARVEST_LEVEL, INITIAL_PET, SPECIES, STAGES, addXp, harvestIfReady, newSeed, stageOf, xpToNextLevel} from './growth.ts'
+import {RARITY, hasGoldPot, HARVEST_LEVEL, INITIAL_PET, SPECIES, STAGES, addXp, harvestIfReady, newSeed, stageName, stageOf, xpToNextLevel, FORM} from './growth.ts'
 
 const P = (level: number, xp: number) => ({...INITIAL_PET, level, xp}) // 같은 종으로 비교용
 
@@ -77,5 +77,12 @@ const allDone = SPECIES.map((sp) => ({species: sp.id, completedAt: 'T'}))
 assert.equal(hasGoldPot(allDone), true)
 assert.equal(hasGoldPot(allDone.slice(1)), false)
 assert.equal(hasGoldPot([...allDone.slice(1), allDone[1]]), false) // 같은 종 중복은 인정 안 됨
+
+// 마지막 단계 이름은 식물 종류(나무/덤불/풀꽃)를 따르고, 다른 단계는 종과 상관없다
+assert.equal(stageName('tree', 'cherry'), '큰 나무')
+assert.equal(stageName('tree', 'rose'), '큰 덤불')
+assert.equal(stageName('tree', 'daisy'), '꽃 무더기')
+assert.equal(stageName('bud', 'rose'), '꽃봉오리')
+assert.equal(Object.keys(FORM).length, SPECIES.length) // 모든 종에 종류가 정해져 있다
 
 console.log('growth: all checks passed')

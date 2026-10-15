@@ -6,13 +6,13 @@ export const EN: Record<string, string> = {
     '라벤더': 'Lavender', '수국': 'Hydrangea', '양귀비': 'Poppy', '코스모스': 'Cosmos', '벚꽃': 'Cherry blossom',
     '흔함': 'Common', '드묾': 'Uncommon', '희귀': 'Rare',
     '씨앗': 'Seed', '싹': 'Sprout', '새싹': 'Seedling', '어린 잎': 'Young leaves', '무성한 잎': 'Leafy', '꽃봉오리': 'Bud',
-    '첫 꽃': 'First bloom', '만개': 'Full bloom', '열매': 'Fruit', '큰 나무': 'Big tree',
+    '첫 꽃': 'First bloom', '만개': 'Full bloom', '열매': 'Fruit', '큰 나무': 'Big tree', '큰 덤불': 'Big shrub', '꽃 무더기': 'Flower clump',
 
     // 업적, 소품, 성장 속도
     '첫 열매': 'First fruit', '식물을 처음 완성했어요': 'You completed your first plant',
     '정원사': 'Gardener', '서로 다른 5종을 완성했어요': 'You completed 5 different species',
     '식물 박사': 'Botanist', '모든 종을 완성했어요': 'You completed every species',
-    '식물을 큰 나무 단계까지 키웠어요': 'You grew a plant to the big tree stage',
+    '다 자란 식물': 'Fully grown', '식물을 마지막 성장 단계까지 키웠어요': 'You grew a plant to its final growth stage',
     '새싹 토큰러': 'Sprout tokener', '누적 1,000 XP': '1,000 XP in total',
     '숲의 주민': 'Forest dweller', '누적 10,000 XP': '10,000 XP in total',
     '숲의 주인': 'Forest master', '누적 100,000 XP': '100,000 XP in total',
@@ -49,8 +49,8 @@ export const EN: Record<string, string> = {
     '사진 한 장 남겨 줄래요?': 'Want to take a photo?',
     '열매가 달렸어요': 'I have fruit now',
     '열매가 조금씩 익고 있어요': 'My fruit is slowly ripening',
-    '곧 큰 나무가 될 거예요': "I'll be a big tree soon",
-    '이제 어엿한 큰 나무예요': "I'm a proper big tree now",
+    '곧 다 자랄 거예요': "I'll be fully grown soon",
+    '이제 어엿하게 다 자랐어요': "I'm fully grown now",
     '곧 정원에 심어질 시간이에요': "It's almost time to be planted in the garden",
     '그동안 고마웠어요, 곧 새 친구가 와요': 'Thanks for everything, a new friend is coming soon',
 
@@ -118,7 +118,7 @@ export const EN: Record<string, string> = {
     '아직 만나지 못한 식물': "A plant you haven't met yet",
     '정원 소품 {n}/{total}': 'Garden items {n}/{total}',
     " · 식물 {n}개를 더 완성하면 '{item}'": " · Complete {n} more plant(s) to unlock '{item}'", ' · 모두 해금!': ' · All unlocked!',
-    '큰 나무까지 키워 완성하면 이곳에 심어져요.': 'Grow a plant into a big tree and it will be planted here.',
+    '끝까지 키워 완성하면 이곳에 심어져요.': 'Grow a plant all the way and it will be planted here.',
     '업적 {n}/{total}': 'Achievements {n}/{total}',
     '현재 식물 성장 기록': 'Growth history of the current plant', '기록 시작 · ': 'Started · ', '성장 단계': 'Growth stages', '설정': 'Settings',
 

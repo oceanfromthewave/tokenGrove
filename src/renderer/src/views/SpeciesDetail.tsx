@@ -1,9 +1,9 @@
 import {useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import {tr} from '../../../shared/i18n'
-import {SPECIES, STAGES, type Completed, type SpeciesId} from '../../../shared/growth'
+import {SPECIES, STAGES, stageName, type Completed, type SpeciesId} from '../../../shared/growth'
 
-// 도감에서 고른 종의 상세. 슬라이더로 씨앗부터 큰 나무까지 성장 과정을 넘겨볼 수 있다.
+// 도감에서 고른 종의 상세. 슬라이더로 씨앗부터 마지막 단계까지 성장 과정을 넘겨볼 수 있다.
 function SpeciesDetail({species, count, lastAt, plants}: {
     species: SpeciesId
     count: number
@@ -18,7 +18,7 @@ function SpeciesDetail({species, count, lastAt, plants}: {
         <div className="detail">
             <PetSprite stage={stage.id} species={species} scale={8}/>
             <div className="detail-name">{name}</div>
-            <div className="detail-stage">{step + 1}/{STAGES.length} · {stage.name}</div>
+            <div className="detail-stage">{step + 1}/{STAGES.length} · {stageName(stage.id, species)}</div>
             <input
                 type="range"
                 min={0}
@@ -38,10 +38,9 @@ function SpeciesDetail({species, count, lastAt, plants}: {
                         {plant.growthHistory?.length ? (
                             <ol className="timeline compact">
                                 {plant.growthHistory.map((mark, j) => {
-                                    const reached = STAGES.find((s) => s.id === mark.stage)
                                     return (
                                         <li key={`${mark.at}-${mark.stage}-${j}`}>
-                                            <b>{reached?.name ?? mark.stage}</b>
+                                            <b>{stageName(mark.stage, species)}</b>
                                             <time>{mark.kind === 'start' ? tr('기록 시작 · ') : ''}{new Date(mark.at).toLocaleString()}</time>
                                         </li>
                                     )

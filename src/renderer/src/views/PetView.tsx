@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react'
 import PetSprite from '../components/PetSprite'
 import {tr} from '../../../shared/i18n'
 import PixelArt from '../components/PixelArt'
-import {formatXp, hasGoldPot, stageOf, xpToNextLevel} from '../../../shared/growth'
+import {formatXp, hasGoldPot, stageName, stageOf, xpToNextLevel} from '../../../shared/growth'
 import {onboardingLines, pickChatter} from '../../../shared/chatter'
 import {petEvent, type PetEvent} from '../../../shared/events'
 import {crossedGoal, currentStreak, dateKey} from '../../../shared/stats'
@@ -133,7 +133,7 @@ function PetView(): React.JSX.Element {
                 ))}
                 {big && (
                     <div key={`b${burst.id}`} className="banner">
-                        {burst.kind === 'goal' ? tr('오늘 목표 달성!') : burst.kind === 'newSeed' ? tr('새 씨앗!') : burst.kind === 'stage' ? `${stage.name}!` : 'LEVEL UP!'}
+                        {burst.kind === 'goal' ? tr('오늘 목표 달성!') : burst.kind === 'newSeed' ? tr('새 씨앗!') : burst.kind === 'stage' ? `${stageName(stage.id, pet.species)}!` : 'LEVEL UP!'}
                     </div>
                 )}
                 {chat && (
@@ -154,7 +154,7 @@ function PetView(): React.JSX.Element {
                 {burst?.kind === 'xp' && <div key={`g${burst.id}`} className="gain">+{formatXp(burst.gain)}</div>}
             </div>
             <div className="plate">
-                <div className="status" title={pet.name || undefined}>{pet.name ? `${pet.name} · ` : ''}{stage.name} Lv.{pet.level}</div>
+                <div className="status" title={pet.name || undefined}>{pet.name ? `${pet.name} · ` : ''}{stageName(stage.id, pet.species)} Lv.{pet.level}</div>
                 <div className="xpbar" title={`${formatXp(pet.xp)} / ${xpToNextLevel(pet.level)} XP`}>
                     <i style={{width: `${Math.min(100, (pet.xp / xpToNextLevel(pet.level)) * 100)}%`}}/>
                 </div>

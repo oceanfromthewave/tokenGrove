@@ -20,7 +20,7 @@ Use Claude Code or Codex as you normally do and a small flower pot on your deskt
 
 ### Growth stages (10)
 
-seed → sprout → seedling → young leaves → leafy → bud → first bloom → full bloom → fruit → big tree
+seed → sprout → seedling → young leaves → leafy → bud → first bloom → full bloom → fruit → fully grown (a big tree for the cherry blossom, a shrub for rose / hydrangea / lavender, a flower clump for the rest)
 
 Each of levels 1 to 10 is one stage. A full plant is tuned to take about a month at typical usage.
 

@@ -357,6 +357,55 @@ function canopy(): string[] {
 
 const CX = SRC / 2 // 화면 가운데(줄기) 위치
 
+// 덤불 둔덕: 땅에서 솟은 둥근 잎 더미. top줄부터 시작해 흙까지. 왼쪽 위가 밝다.
+function mound(top: number): string[] {
+    const cx = (SRC - 1) / 2
+    return Array.from({length: H}, (_, y) =>
+        Array.from({length: SRC}, (_, x): string => {
+            if (y < top) return '.'
+            const t = (y - top + 0.5) / (H - top) // 0 = 맨 위, 1 = 맨 아래
+            const hw = 10.8 * Math.sqrt(1 - (1 - t) ** 2) + 0.7 * Math.cos(3 * y)
+            if (Math.abs(x - cx) > hw) return '.'
+            const light = -(((x - cx) / 11) * 0.55 + (t - 0.4) * 0.85)
+            if (light > 0.35 || (x * 5 + y * 7) % 11 === 0) return 'G'
+            if (light < -0.35 || (x * 3 + y * 5) % 13 === 0) return 'h'
+            return 'g'
+        }).join('')
+    )
+}
+
+// 마지막 단계의 모양은 식물 종류에 따라 다르다.
+//   벚꽃 = 큰 나무, 장미/수국/라벤더 = 덤불, 나머지 풀꽃 = 꽃이 가득한 포기
+function grown(kind: Kind, c: Canvas, l: Layer, flowerAt: (cx: number, bottom: number, d: number) => void): void {
+    const at = (cx: number, top: number, g: string[]): void => void l.stamp(top, Math.round(cx - g[0].length / 2), g)
+    switch (kind) {
+        case 'cherry':
+            l.stamp(0, 0, canopy())
+            c.stem(13, G, 'k').set(12, W - 1, 'k').set(12, W - 2, 'k')
+            break
+        case 'rose': // 장미 덤불: 둥근 잎 더미에 장미가 가득, 가장자리에 열매
+            l.stamp(0, 0, mound(4))
+            for (const [x, y] of [[11, 1], [5, 4], [17, 5], [8, 8], [14, 9]] as const) at(x, y, flowerGrid('rose', 8))
+            at(3, 12, FRUIT4)
+            at(19, 12, FRUIT4)
+            break
+        case 'ball': // 수국 덤불: 파란 꽃송이 덩어리가 덤불을 덮는다
+            l.stamp(0, 0, mound(6))
+            for (const [x, y] of [[11, 1], [5, 6], [17, 6], [11, 9]] as const) at(x, y, flowerGrid('ball', 10))
+            break
+        case 'spike': // 라벤더 덤불: 낮은 잎 더미에서 보라색 이삭이 여러 대 솟는다
+            l.stamp(0, 0, mound(6))
+            for (const [x, h] of [[3, 8], [8, 10], [13, 11], [18, 9]] as const) at(x, 13 - h, spike(5, h))
+            break
+        default: { // 풀꽃 포기: 여러 줄기에 꽃이 층층이 핀 풍성한 한 포기
+            c.stem(9).leaf(G, 5).leaf(G - 4, 5).leaf(G - 8, 4)
+            const flowers: [number, number, number][] = [[CX, 7, 10], [5, 12, 8], [17, 11, 8], [3, 15, 6], [19, 14, 6]]
+            for (const [x, bottom] of flowers) l.line(x < CX ? CX - 1 : CX, 15, x, bottom)
+            for (const [x, bottom, d] of flowers) flowerAt(x, bottom, d)
+        }
+    }
+}
+
 // 한 단계의 그림 두 겹: 줄기/잎(왼쪽 절반) + 위에 올리는 꽃/열매/수관(전체 폭)
 function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; layer: Layer } {
     const c = new Canvas(style)
@@ -414,8 +463,7 @@ function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; 
             break
         }
         case 'tree':
-            l.stamp(0, 0, canopy())
-            c.stem(13, G, 'k').set(12, W - 1, 'k').set(12, W - 2, 'k')
+            grown(kind, c, l, flowerAt)
             break
     }
     return {half: c.done(), layer: l}
