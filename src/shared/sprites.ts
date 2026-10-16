@@ -387,10 +387,6 @@ function cactus(stage: StageId, l: Layer): void {
         }
         column(l, xTo - 1, top, 3, y + 2)
     }
-    const arms = (leftTop: number, rightTop: number): void => {
-        arm(6, 3, 11, leftTop)
-        arm(15, 18, 8, rightTop)
-    }
     switch (stage) {
         case 'tiny':
             column(l, 9, G - 3, 4)
@@ -412,27 +408,29 @@ function cactus(stage: StageId, l: Layer): void {
             column(l, X0, 5, 8)
             flower(11, 5)
             break
-        case 'full':
+        case 'full': // 꽃이 왕관처럼 핀 몸통과 곁에 난 새끼 선인장
             column(l, X0, 4, 8)
-            arms(7, 6)
-            flower(11, 4)
-            flower(3.5, 7)
-            flower(18.5, 6)
-            break
-        case 'fruit':
-            column(l, X0, 4, 8)
-            arms(7, 6)
-            berry(11, 4)
-            berry(3.5, 7)
-            berry(18.5, 6)
-            break
-        default: // 큰 선인장: 키가 크고 가지가 두 개, 꼭대기마다 꽃
-            column(l, X0, 3, 8)
-            arms(6, 3)
+            column(l, 2, 10, 4)
+            flower(8.5, 4)
+            flower(13.5, 4)
             flower(11, 3)
-            flower(3.5, 6)
-            flower(18.5, 3)
-            berry(18.5 - 9, 11) // 몸통 옆에 열매가 하나 남아 있다
+            flower(4, 10)
+            break
+        case 'fruit': // 같은 모양에서 꽃이 지고 빨간 열매가 맺힌다
+            column(l, X0, 4, 8)
+            column(l, 2, 10, 4)
+            berry(8.5, 4)
+            berry(13.5, 4)
+            berry(11, 3)
+            berry(4, 10)
+            break
+        default: // 큰 선인장: 더 굵고 키가 크며, 가지 두 개가 위로 솟고 꼭대기마다 꽃
+            column(l, 6, 3, 10)
+            arm(5, 2, 11, 6)
+            arm(16, 19, 8, 3)
+            flower(10.5, 3)
+            flower(2.5, 6)
+            flower(19.5, 3)
     }
 }
 
