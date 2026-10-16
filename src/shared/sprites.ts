@@ -379,7 +379,6 @@ const CACTUS_BUD = ['.FF.', 'FffE', '.fE.']
 function cactus(stage: StageId, l: Layer): void {
     const X0 = 7 // 몸통 8칸 폭: 7..14
     const flower = (cx: number, top: number): void => void l.stamp(top - 3, Math.round(cx - 3), CACTUS_FLOWER)
-    const berry = (cx: number, top: number): void => void l.stamp(top - 4, Math.round(cx - 2), FRUIT4)
     // 몸통에서 옆으로 뻗었다가 위로 휘는 가지
     const arm = (xFrom: number, xTo: number, y: number, top: number): void => {
         for (let yy = y; yy < y + 3; yy++) {
@@ -416,13 +415,12 @@ function cactus(stage: StageId, l: Layer): void {
             flower(11, 3)
             flower(4, 10)
             break
-        case 'fruit': // 같은 모양에서 꽃이 지고 빨간 열매가 맺힌다
-            column(l, X0, 4, 8)
-            column(l, 2, 10, 4)
-            berry(8.5, 4)
-            berry(13.5, 4)
-            berry(11, 3)
-            berry(4, 10)
+        case 'fruit': // 꽃이 지고 분홍빛 열매가 몸통 위와 옆구리에 불룩하게 맺힌다 (새끼 선인장은 떨어져 나간 모습)
+            column(l, X0, 3, 8)
+            l.stamp(0, 9, FRUIT5)
+            l.stamp(6, 4, FRUIT5)
+            l.stamp(9, 13, FRUIT5)
+            l.stamp(12, 5, FRUIT4)
             break
         default: // 큰 선인장: 더 굵고 키가 크며, 가지 두 개가 위로 솟고 꼭대기마다 꽃
             column(l, 6, 3, 10)
@@ -643,7 +641,7 @@ const SPECIES_STYLE: Record<SpeciesId, Style> = {
     daisy: style('daisy', 'blade', {f: '#ffffff', y: '#ffd84d', r: '#ffffff'}),
     pine: style('pine', 'slim', {g: '#3e7d4f', G: '#6fae7e', h: '#2a5a3a', t: '#5b3a22', f: '#cfe58a', y: '#ffd84d', r: '#9a6a3a'}),
     tulip: style('tulip', 'blade', {g: '#4fa665', G: '#82d38e', h: '#337a4a', t: '#357a45', f: '#e5484d', y: '#b3202a', r: '#e5484d'}),
-    cactus: style('cactus', 'blade', {g: '#4f9a5a', G: '#7fcf86', h: '#34724a', t: '#34724a', f: '#ff7aa8', y: '#e8d890', r: '#e0345a'}),
+    cactus: style('cactus', 'blade', {g: '#4f9a5a', G: '#7fcf86', h: '#34724a', t: '#34724a', f: '#ff7aa8', y: '#e8d890', r: '#e84c86'}),
     rose: style('rose', 'broad', {g: '#3f8f5a', G: '#68bd7f', h: '#2a6a41', t: '#2f6e45', f: '#e0345a', y: '#a8183a', r: '#e5484d'}),
     lavender: style('spike', 'slim', {g: '#7fae8a', G: '#a9d1b2', h: '#58856a', t: '#58856a', f: '#a78bda', y: '#7a5cc0', r: '#7a5cc0'}),
     hydrangea: style('ball', 'broad', {g: '#4e9e6a', G: '#7fcb97', h: '#35755a', t: '#35755a', f: '#7fb3ff', y: '#c7dcff', r: '#5a8fe0', C: '#a8cbff', c: '#7fb3ff', e: '#5a8fe0'}),
