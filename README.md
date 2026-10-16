@@ -26,7 +26,7 @@ Each of levels 1 to 10 is one stage. A full plant is tuned to take about a month
 
 ### Species (10)
 
-Daisy, pine, tulip, balloon flower, rose, lavender, hydrangea, poppy, cosmos, cherry blossom.
+Daisy, pine, tulip, cactus, rose, lavender, hydrangea, poppy, dandelion, cherry blossom.
 The seed stage looks the same for every species, so you cannot tell which one you got until it sprouts.
 
 ### How XP is calculated

@@ -29,12 +29,12 @@ const BY_SPECIES: Record<SpeciesId, string> = {
     daisy: '하얀 꽃잎이 햇살을 닮았죠?',
     pine: '사계절 푸른 게 제 자랑이에요',
     tulip: '빨간 컵에 햇살을 담고 있어요',
-    bellflower: '보라색 별이 반짝여요',
+    cactus: '물은 가끔만 줘도 괜찮아요',
     rose: '가시가 있어도 마음은 다정해요',
     lavender: '좋은 향기가 나는 것 같아요',
     hydrangea: '푸른 구름 같은 꽃이에요',
     poppy: '주황빛 꽃이 바람에 흔들려요',
-    cosmos: '하늘하늘 흔들리는 게 좋아요',
+    dandelion: '바람이 불면 씨앗을 날려 보낼 거예요',
     cherry: '꽃잎이 흩날릴 날을 기다려요'
 }
 

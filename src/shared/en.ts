@@ -2,11 +2,11 @@
 // 새 한국어 문구를 tr()로 감싸면 여기에도 반드시 추가해야 한다. (i18n.test.mts가 빠진 번역을 찾아낸다)
 export const EN: Record<string, string> = {
     // 종, 희귀도, 성장 단계
-    '데이지': 'Daisy', '소나무': 'Pine', '튤립': 'Tulip', '도라지': 'Balloon flower', '장미': 'Rose',
-    '라벤더': 'Lavender', '수국': 'Hydrangea', '양귀비': 'Poppy', '코스모스': 'Cosmos', '벚꽃': 'Cherry blossom',
+    '데이지': 'Daisy', '소나무': 'Pine', '튤립': 'Tulip', '선인장': 'Cactus', '장미': 'Rose',
+    '라벤더': 'Lavender', '수국': 'Hydrangea', '양귀비': 'Poppy', '민들레': 'Dandelion', '벚꽃': 'Cherry blossom',
     '흔함': 'Common', '드묾': 'Uncommon', '희귀': 'Rare',
     '씨앗': 'Seed', '싹': 'Sprout', '새싹': 'Seedling', '어린 잎': 'Young leaves', '무성한 잎': 'Leafy', '꽃봉오리': 'Bud',
-    '첫 꽃': 'First bloom', '만개': 'Full bloom', '열매': 'Fruit', '큰 나무': 'Big tree', '큰 덤불': 'Big shrub', '꽃 무더기': 'Flower clump',
+    '첫 꽃': 'First bloom', '만개': 'Full bloom', '열매': 'Fruit', '큰 나무': 'Big tree', '큰 덤불': 'Big shrub', '큰 선인장': 'Big cactus', '꽃 무더기': 'Flower clump',
 
     // 업적, 소품, 성장 속도
     '첫 열매': 'First fruit', '식물을 처음 완성했어요': 'You completed your first plant',
@@ -58,12 +58,12 @@ export const EN: Record<string, string> = {
     '하얀 꽃잎이 햇살을 닮았죠?': 'My white petals look like sunshine, right?',
     '사계절 푸른 게 제 자랑이에요': "I'm proud to stay green all year",
     '빨간 컵에 햇살을 담고 있어요': 'My red cup is full of sunshine',
-    '보라색 별이 반짝여요': 'My purple star is sparkling',
+    '물은 가끔만 줘도 괜찮아요': "I'm fine with water only now and then",
     '가시가 있어도 마음은 다정해요': 'I have thorns but a kind heart',
     '좋은 향기가 나는 것 같아요': 'I think I smell nice',
     '푸른 구름 같은 꽃이에요': 'My flower is like a blue cloud',
     '주황빛 꽃이 바람에 흔들려요': 'My orange flower sways in the wind',
-    '하늘하늘 흔들리는 게 좋아요': 'I love swaying gently',
+    '바람이 불면 씨앗을 날려 보낼 거예요': "When the wind blows, I'll send my seeds flying",
     '꽃잎이 흩날릴 날을 기다려요': "I'm waiting for the day my petals fly",
 
     // 펫 말풍선: 요일, 사용량, 연속, 시간대, 이름, 공통

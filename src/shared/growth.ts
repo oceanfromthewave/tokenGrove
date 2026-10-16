@@ -6,16 +6,16 @@ export const SPECIES = [
     {id: 'daisy', get name() { return tr('데이지') }, rarity: 'common'},
     {id: 'pine', get name() { return tr('소나무') }, rarity: 'rare'},
     {id: 'tulip', get name() { return tr('튤립') }, rarity: 'common'},
-    {id: 'bellflower', get name() { return tr('도라지') }, rarity: 'common'},
+    {id: 'cactus', get name() { return tr('선인장') }, rarity: 'uncommon'},
     {id: 'rose', get name() { return tr('장미') }, rarity: 'rare'},
     {id: 'lavender', get name() { return tr('라벤더') }, rarity: 'uncommon'},
     {id: 'hydrangea', get name() { return tr('수국') }, rarity: 'uncommon'},
     {id: 'poppy', get name() { return tr('양귀비') }, rarity: 'uncommon'},
-    {id: 'cosmos', get name() { return tr('코스모스') }, rarity: 'common'},
+    {id: 'dandelion', get name() { return tr('민들레') }, rarity: 'common'},
     {id: 'cherry', get name() { return tr('벚꽃') }, rarity: 'rare'}
 ] as const
 
-// 희귀도: 새 씨앗이 이 종일 확률의 가중치. (흔함 4종 40 + 드묾 3종 18 + 희귀 3종 9 = 67 -> 희귀 종 하나당 약 4.5%)
+// 희귀도: 새 씨앗이 이 종일 확률의 가중치. (흔함 3종 30 + 드묾 4종 24 + 희귀 3종 9 = 63 -> 희귀 종 하나당 약 4.8%)
 export const RARITY = {
     common: {get name() { return tr('흔함') }, weight: 10},
     uncommon: {get name() { return tr('드묾') }, weight: 6},
@@ -124,14 +124,14 @@ export const STAGES = [
 export const isStageId = (v: unknown): v is StageId => STAGES.some((s) => s.id === v)
 
 // 마지막 단계의 모습은 식물 종류에 따라 다르다(스프라이트도 같은 기준). 이름도 종류에 맞게 보여준다.
-export type Form = 'tree' | 'shrub' | 'herb'
+export type Form = 'tree' | 'shrub' | 'herb' | 'cactus'
 export const FORM: Record<SpeciesId, Form> = {
-    daisy: 'herb', pine: 'tree', tulip: 'herb', bellflower: 'herb', poppy: 'herb', cosmos: 'herb',
+    daisy: 'herb', pine: 'tree', tulip: 'herb', cactus: 'cactus', poppy: 'herb', dandelion: 'herb',
     rose: 'shrub', lavender: 'shrub', hydrangea: 'shrub', cherry: 'tree'
 }
 
 export function stageName(id: StageId, species: SpeciesId): string {
-    if (id === 'tree') return {tree: tr('큰 나무'), shrub: tr('큰 덤불'), herb: tr('꽃 무더기')}[FORM[species]]
+    if (id === 'tree') return {tree: tr('큰 나무'), shrub: tr('큰 덤불'), herb: tr('꽃 무더기'), cactus: tr('큰 선인장')}[FORM[species]]
     return STAGES.find((s) => s.id === id)?.name ?? id
 }
 

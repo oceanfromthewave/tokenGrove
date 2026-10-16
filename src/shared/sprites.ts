@@ -88,8 +88,8 @@ class Layer {
     }
 }
 
-type RadialKind = 'daisy' | 'cosmos' | 'poppy' | 'cherry' | 'bell' | 'rose' | 'ball'
-type Kind = RadialKind | 'tulip' | 'spike' | 'pine'
+type RadialKind = 'daisy' | 'poppy' | 'cherry' | 'rose' | 'ball' | 'dandelion'
+type Kind = RadialKind | 'tulip' | 'spike' | 'pine' | 'cactus'
 
 // 둥근 꽃: 각도(th)마다 반지름 R이 달라지는 모양 + 꽃술 + 명암. d x h 칸의 격자(위에서 약간 내려다본 느낌이라 h < d).
 function radial(kind: RadialKind, d: number, h: number): string[] {
@@ -112,13 +112,6 @@ function radial(kind: RadialKind, d: number, h: number): string[] {
                     if (r < 0.28) return nx < 0 && ny < 0 ? 'Y' : 'y'
                     return lobe < -0.8 && r > 0.4 ? 'E' : lit(R)
                 }
-                case 'cosmos': {
-                    const lobe = Math.cos(8 * th)
-                    R = 0.72 + 0.28 * lobe
-                    if (r > R) return '.'
-                    if (r < 0.24) return nx < 0 && ny < 0 ? 'Y' : 'y'
-                    return lobe < -0.7 && r > 0.35 ? 'E' : lit(R)
-                }
                 case 'poppy': {
                     const lobe = Math.cos(4 * th)
                     R = 0.86 + 0.14 * lobe
@@ -135,19 +128,19 @@ function radial(kind: RadialKind, d: number, h: number): string[] {
                     if (r < 0.38 && (x + y) % 2 === 0) return 'Y'
                     return lobe < -0.8 && r > 0.4 ? 'E' : lit(R)
                 }
-                case 'bell': {
-                    const lobe = (Math.cos(5 * top) + 1) / 2
-                    R = 0.32 + 0.68 * lobe ** 1.4
-                    if (r > R) return '.'
-                    if (r < 0.17) return 'Y'
-                    return Math.cos(5 * top) > 0.9 && r > 0.2 ? 'E' : lit(R)
-                }
                 case 'rose': {
                     R = 0.97 + 0.03 * Math.cos(5 * th)
                     if (r > R) return '.'
                     if (r < 0.1) return 'E'
                     const band = Math.floor(r * 5.2 + (top / (2 * Math.PI)) * 1.5 + 10) // 소용돌이 모양으로 겹꽃잎
                     return ['f', 'F', 'E'][((band % 3) + 3) % 3]
+                }
+                case 'dandelion': {
+                    const lobe = Math.cos(22 * th)
+                    R = 0.88 + 0.12 * lobe
+                    if (r > R) return '.'
+                    if (r < 0.2) return nx < 0 && ny < 0 ? 'Y' : 'y'
+                    return lobe < -0.75 ? 'E' : (x + y) % 3 === 0 && light > 0 ? 'F' : lit(R)
                 }
                 case 'ball': {
                     if (r > 1) return '.'
@@ -189,7 +182,7 @@ function spike(w = 7, h = 11): string[] {
 }
 
 function flowerGrid(kind: Kind, d: number): string[] {
-    if (kind === 'pine') return [] // 소나무는 꽃 그림을 쓰지 않는다 (pine() 참고)
+    if (kind === 'pine' || kind === 'cactus') return [] // 소나무와 선인장은 꽃 그림을 쓰지 않는다 (pine(), cactus() 참고)
     if (kind === 'tulip') return tulip(Math.max(7, Math.round(d * 0.58)), Math.round(d * 0.7))
     if (kind === 'spike') return spike(Math.max(5, Math.round(d * 0.42)), Math.round(d * 0.7))
     return radial(kind, d, Math.round(d * 0.66))
@@ -218,11 +211,23 @@ const FRUIT4 = ['.rr.', 'rQrr', 'rrrx', '.xx.']
 // 종마다 열매 모양이 다르다. (r Q x = 열매 색, g G h = 초록, f F E = 꽃 색, y Y z = 꽃술 색)
 const HIP = ['..h..', '.rrr.', 'rQrrr', 'rrrrr', 'rrrrx', '.rrx.', '..x..'] // 장미 열매: 위에 꽃받침이 남은 타원
 const POD = ['.kkk.', 'kkkkk', 'rQrrr', 'rrrrx', 'rrrxx', '.rxx.'] // 양귀비 씨앗 주머니: 갈색 왕관 꼭대기
-const CAPSULE = ['.hFh.', 'rQrrr', 'rrrrr', 'rrrrx', '.rrx.'] // 도라지: 별 모양 꼭지가 달린 풍선
 const TULIP_POD = ['.rr.', 'rQrr', 'rrrx', 'rxrx', 'rxrx', 'rrrx', '.rrx', '..x.'] // 튤립: 세로 줄이 있는 길쭉한 씨앗 주머니
-const PUFF = ['..FF..', '.FfFF.', 'FFFfFF', 'FfFFFf', '.FFfF.', '..FF..'] // 코스모스: 솜털 씨앗
 // 라벤더: 시든 이삭 (꽃 색을 어둡게)
 const dry = (g: string[]): string[] => g.map((row) => row.replace(/f/g, 'E'))
+
+// 민들레 씨앗 솜털 공: 하얀 공에 가장자리가 보송보송하고 가운데에 씨앗이 비친다
+function puffball(d: number): string[] {
+    return Array.from({length: d}, (_, y) =>
+        Array.from({length: d}, (_, x) => {
+            const nx = (x + 0.5 - d / 2) / (d / 2), ny = (y + 0.5 - d / 2) / (d / 2)
+            const r = Math.hypot(nx, ny)
+            if (r > 1 || (r > 0.8 && (x + y) % 2 === 0)) return '.'
+            if (r < 0.15) return 'y'
+            const light = -(nx * 0.55 + ny * 0.85)
+            return light > 0.3 ? 'Q' : light < -0.3 ? 'x' : 'r'
+        }).join('')
+    )
+}
 
 // 열매를 놓는 도구: 가지 끝(tipX, tipY)에서 아래로 매달리거나(hang), 위로 서 있다(stand)
 function fruitLayer(kind: Kind, l: Layer): void {
@@ -272,11 +277,6 @@ function fruitLayer(kind: Kind, l: Layer): void {
             stand(...R, 17, 9, TULIP_POD)
             l.line(CX, 12, CX, 9)
             break
-        case 'bell': // 풍선 모양 열매
-            top(CAPSULE)
-            hang(...L, 5, 6, CAPSULE)
-            hang(...R, 17, 7, CAPSULE)
-            break
         case 'spike': { // 시든 이삭
             const sp = dry(spike(5, 9))
             stand(CX - 1, 12, CX - 1, 9, sp)
@@ -285,10 +285,10 @@ function fruitLayer(kind: Kind, l: Layer): void {
             l.line(CX, 12, CX, 9)
             break
         }
-        case 'cosmos': // 솜털 씨앗
-            top(PUFF)
-            hang(...L, 5, 6, PUFF)
-            hang(...R, 17, 7, PUFF)
+        case 'dandelion': // 하얀 솜털 공
+            top(puffball(9))
+            hang(...L, 5, 6, puffball(7))
+            hang(...R, 17, 7, puffball(7))
             break
         case 'ball': { // 포도송이처럼 작은 열매가 뭉친다
             const bunch = (cx: number, top: number, pts: [number, number][]): void => {
@@ -361,6 +361,80 @@ function pad(l: Layer, cx: number, cy: number, rx: number, ry: number): void {
 
 const POLLEN = ['.Y.', 'YyY', '.y.'] // 꽃가루 송이
 const CONE = ['.rr.', 'rQrr', 'rrrx', '.rx.'] // 솔방울
+
+// 선인장: 줄기 기둥(w칸 폭, top줄부터 bottom줄까지). 위가 둥글고 왼쪽이 밝다. 가시는 노란 점.
+function column(l: Layer, x0: number, top: number, w: number, bottom = G): void {
+    for (let y = top; y <= bottom; y++) {
+        const inset = Math.max(0, (w >= 5 ? 2 : 1) - (y - top))
+        for (let dx = inset; dx < w - inset; dx++) {
+            const tone = dx < w * 0.3 ? 'G' : dx >= w * 0.7 ? 'h' : 'g'
+            l.put(y, x0 + dx, (y * 2 + dx) % 5 === 0 && dx % 3 === 1 ? 'Y' : tone)
+        }
+    }
+}
+
+const CACTUS_FLOWER = ['.FfFf.', 'FfYYfE', '.fEEf.']
+const CACTUS_BUD = ['.FF.', 'FffE', '.fE.']
+
+function cactus(stage: StageId, l: Layer): void {
+    const X0 = 7 // 몸통 8칸 폭: 7..14
+    const flower = (cx: number, top: number): void => void l.stamp(top - 3, Math.round(cx - 3), CACTUS_FLOWER)
+    const berry = (cx: number, top: number): void => void l.stamp(top - 4, Math.round(cx - 2), FRUIT4)
+    // 몸통에서 옆으로 뻗었다가 위로 휘는 가지
+    const arm = (xFrom: number, xTo: number, y: number, top: number): void => {
+        for (let yy = y; yy < y + 3; yy++) {
+            for (let x = Math.min(xFrom, xTo); x <= Math.max(xFrom, xTo); x++) l.put(yy, x, yy === y ? 'G' : 'g')
+        }
+        column(l, xTo - 1, top, 3, y + 2)
+    }
+    const arms = (leftTop: number, rightTop: number): void => {
+        arm(6, 3, 11, leftTop)
+        arm(15, 18, 8, rightTop)
+    }
+    switch (stage) {
+        case 'tiny':
+            column(l, 9, G - 3, 4)
+            break
+        case 'sprout':
+            column(l, 8, G - 6, 6)
+            break
+        case 'young':
+            column(l, 8, G - 9, 6)
+            break
+        case 'leafy':
+            column(l, X0, G - 12, 8)
+            break
+        case 'bud':
+            column(l, X0, 4, 8)
+            l.stamp(1, 9, CACTUS_BUD)
+            break
+        case 'bloom':
+            column(l, X0, 5, 8)
+            flower(11, 5)
+            break
+        case 'full':
+            column(l, X0, 4, 8)
+            arms(7, 6)
+            flower(11, 4)
+            flower(3.5, 7)
+            flower(18.5, 6)
+            break
+        case 'fruit':
+            column(l, X0, 4, 8)
+            arms(7, 6)
+            berry(11, 4)
+            berry(3.5, 7)
+            berry(18.5, 6)
+            break
+        default: // 큰 선인장: 키가 크고 가지가 두 개, 꼭대기마다 꽃
+            column(l, X0, 3, 8)
+            arms(6, 3)
+            flower(11, 3)
+            flower(3.5, 6)
+            flower(18.5, 3)
+            berry(18.5 - 9, 11) // 몸통 옆에 열매가 하나 남아 있다
+    }
+}
 
 function pine(stage: StageId, l: Layer): void {
     const trunk = (from: number): void => {
@@ -456,7 +530,7 @@ function grown(kind: Kind, c: Canvas, l: Layer, flowerAt: (cx: number, bottom: n
             c.stem(9).leaf(G, 5).leaf(G - 4, 5).leaf(G - 8, 4)
             const flowers: [number, number, number][] = [[CX, 7, 10], [5, 12, 8], [17, 11, 8], [3, 15, 6], [19, 14, 6]]
             for (const [x, bottom] of flowers) l.line(x < CX ? CX - 1 : CX, 15, x, bottom)
-            for (const [x, bottom, d] of flowers) flowerAt(x, bottom, d)
+            flowers.forEach(([x, bottom, d], i) => (kind === 'dandelion' && i >= 3 ? at(x, bottom - 6, puffball(6)) : flowerAt(x, bottom, d)))
         }
     }
 }
@@ -467,6 +541,10 @@ function plant(stage: StageId, kind: Kind, style: LeafStyle): { half: string[]; 
     const l = new Layer()
     if (kind === 'pine' && !['seed', 'tiny', 'sprout', 'young'].includes(stage)) {
         pine(stage, l)
+        return {half: c.done(), layer: l}
+    }
+    if (kind === 'cactus' && stage !== 'seed') {
+        cactus(stage, l)
         return {half: c.done(), layer: l}
     }
     const body = (top: number): Canvas => c.stem(top).leaf(G, 5).leaf(G - 5, 4)
@@ -567,12 +645,12 @@ const SPECIES_STYLE: Record<SpeciesId, Style> = {
     daisy: style('daisy', 'blade', {f: '#ffffff', y: '#ffd84d', r: '#ffffff'}),
     pine: style('pine', 'slim', {g: '#3e7d4f', G: '#6fae7e', h: '#2a5a3a', t: '#5b3a22', f: '#cfe58a', y: '#ffd84d', r: '#9a6a3a'}),
     tulip: style('tulip', 'blade', {g: '#4fa665', G: '#82d38e', h: '#337a4a', t: '#357a45', f: '#e5484d', y: '#b3202a', r: '#e5484d'}),
-    bellflower: style('bell', 'slim', {g: '#6aa87a', G: '#9bd6a8', h: '#417a56', t: '#3f7a49', f: '#9b6fe0', y: '#ffe27a', r: '#6b3fa0'}),
+    cactus: style('cactus', 'blade', {g: '#4f9a5a', G: '#7fcf86', h: '#34724a', t: '#34724a', f: '#ff7aa8', y: '#e8d890', r: '#e0345a'}),
     rose: style('rose', 'broad', {g: '#3f8f5a', G: '#68bd7f', h: '#2a6a41', t: '#2f6e45', f: '#e0345a', y: '#a8183a', r: '#e5484d'}),
     lavender: style('spike', 'slim', {g: '#7fae8a', G: '#a9d1b2', h: '#58856a', t: '#58856a', f: '#a78bda', y: '#7a5cc0', r: '#7a5cc0'}),
     hydrangea: style('ball', 'broad', {g: '#4e9e6a', G: '#7fcb97', h: '#35755a', t: '#35755a', f: '#7fb3ff', y: '#c7dcff', r: '#5a8fe0', C: '#a8cbff', c: '#7fb3ff', e: '#5a8fe0'}),
     poppy: style('poppy', 'blade', {g: '#6aa84f', G: '#9bd16f', h: '#44803a', t: '#44803a', f: '#f0431f', y: '#3a1d12', Y: '#ffb03d', z: '#140806', r: '#e5484d'}),
-    cosmos: style('cosmos', 'slim', {g: '#6bb26a', G: '#9cdb8a', h: '#468a4a', t: '#468a4a', f: '#ff9ccf', y: '#ffd84d', r: '#e5484d'}),
+    dandelion: style('dandelion', 'blade', {g: '#5fa84a', G: '#8fd36b', h: '#3f8040', t: '#4a8a3a', f: '#ffd23a', y: '#f29a1a', r: '#f1f3f5'}),
     cherry: style('cherry', 'blade', {g: '#7a9a55', G: '#a9c97a', h: '#58774a', t: '#6b4a2b', f: '#ffb7d0', y: '#ff8fb3', r: '#ff9fc0', C: '#ffd6e6', c: '#ffb7d0', e: '#f28fb0'})
 }
 

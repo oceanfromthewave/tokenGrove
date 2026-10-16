@@ -35,7 +35,7 @@ function parseGrowthHistory(v: unknown): GrowthMark[] | undefined {
 }
 
 // 없어진 종은 새 종으로 옮긴다. (예전 저장 파일의 해바라기 -> 소나무)
-const RENAMED: Record<string, string> = {sunflower: 'pine'}
+const RENAMED: Record<string, string> = {sunflower: 'pine', bellflower: 'cactus', cosmos: 'dandelion'}
 const renamed = (v: unknown): unknown => (typeof v === 'string' && Object.hasOwn(RENAMED, v) ? RENAMED[v] : v)
 
 // 저장 파일 내용을 SaveData로 바꾼다. 형식이 이상하면 새로 시작(EMPTY_SAVE)한다.
