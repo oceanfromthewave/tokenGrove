@@ -48,7 +48,7 @@ The conversion rules live in [`src/shared/usage.ts`](src/shared/usage.ts).
 - From the logs the app extracts only the record ID, timestamp and token numbers. Prompts, conversation text and code are never stored or printed.
 - The original logs (`~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/*.jsonl`) are only read, never modified.
 - The only file the app writes is `%APPDATA%\tokengrove\save.json`.
-- The only network request is an update check: the app asks GitHub for the latest release of this repository (at startup and every 6 hours) and, if there is a newer one, asks whether you want to update. Only if you say yes, it downloads the installer from this repository's release (checksum-verified, and the installer is not code-signed) and installs it after a restart. No usage data is sent. You can turn it off in the settings.
+- The only network request is an update check: the app asks GitHub for the latest release of this repository (at startup, every hour, and after waking from sleep) and, if there is a newer one, asks whether you want to update. Only if you say yes, it downloads the installer from this repository's release (checksum-verified, and the installer is not code-signed) and installs it after a restart. No usage data is sent. You can turn it off in the settings.
 
 ## Download
 

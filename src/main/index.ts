@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, screen, shell, Tray} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, net, Notification, powerMonitor, screen, shell, Tray} from 'electron'
 import {readFile, stat, writeFile} from 'fs/promises'
 import {autoUpdater} from 'electron-updater'
 import {join} from 'path'
@@ -546,7 +546,8 @@ app.whenReady().then(() => {
     pollLogs()
     setInterval(pollLogs, POLL_MS)
     setTimeout(() => void checkForUpdate(false), 15_000) // 시작 직후에는 펫이 자리 잡도록 잠깐 기다린다
-    setInterval(() => void checkForUpdate(false), 6 * 60 * 60 * 1000)
+    setInterval(() => void checkForUpdate(false), 60 * 60 * 1000) // 켜 둔 채로도 한 시간 안에 새 버전을 알 수 있게
+    powerMonitor.on('resume', () => setTimeout(() => void checkForUpdate(false), 15_000)) // 절전에서 깨어나면 바로 한 번 확인 (네트워크가 붙을 시간을 둔다)
 })
 
 app.on('window-all-closed', () => {
